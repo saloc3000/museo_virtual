@@ -71,18 +71,45 @@
     text-shadow: 0 1px 6px rgba(0,0,0,.85);
   }
   #pista.visible { opacity: 1; }
-
-  #cedula {
-    position: fixed; right: 28px; top: 50%; transform: translate(24px, -50%);
-    width: min(340px, calc(100vw - 56px)); z-index: 20;
-    background: rgba(10,14,11,.92); backdrop-filter: blur(14px);
-    border-left: 2px solid var(--acento); padding: 26px; opacity: 0; pointer-events: none;
-    transition: opacity .3s, transform .3s;
-  }
+#cedula {
+  position: fixed; right: 28px; top: 50%; transform: translate(24px, -50%);
+  width: min(340px, calc(100vw - 56px)); z-index: 20;
+  background: rgba(10,14,11,.92); backdrop-filter: blur(14px);
+  border-left: 2px solid var(--acento); padding: 26px; opacity: 0; pointer-events: none;
+  transition: opacity .3s, transform .3s;
+  
+  /* --- NUEVAS PROPIEDADES PARA EL SCROLL --- */
+  max-height: 80vh;          /* Evita que el panel sea más alto que la pantalla */
+  overflow-y: auto;          /* Activa la barra de desplazamiento vertical si el contenido excede el alto */
+  box-sizing: border-box;    /* Asegura que el padding no rompa el cálculo de la altura */
+}
   #cedula.visible { opacity: 1; transform: translate(0, -50%); pointer-events: auto; }
-  #cedula .autor { font-size: 11px; letter-spacing: .18em; text-transform: uppercase; color: var(--acento); margin: 0 0 10px; }
   #cedula h2 { font-family: var(--serif); font-weight: 400; font-size: 25px; line-height: 1.25; margin: 0 0 4px; }
-  #cedula .anio { font-family: var(--serif); font-style: italic; color: var(--cal); font-size: 16px; margin: 0 0 16px; }
+  #cedula .autor { font-size: 11px; letter-spacing: .18em; text-transform: uppercase; color: var(--acento); margin: 0 0 10px; }
+  
+  /* --- REEMPLAZO Y NUEVOS ESTILOS PARA LOS TAGS --- */
+  #cedula .ods { 
+    display: flex; 
+    flex-wrap: wrap; 
+    gap: 6px; 
+    margin: 0 0 16px; 
+  }
+  #cedula .ods:empty { display: none; }
+
+  /* Estilo visual de cada tag individual */
+  #cedula .ods .tag {
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: .05em;
+    color: #0a0e0b;                     /* Texto oscuro para buen contraste */
+    background: var(--acento);          /* Fondo con tu color acento principal */
+    border: 1px solid var(--acento);
+    padding: 3px 10px;
+    border-radius: 12px;
+    display: inline-block;
+    line-height: 1.2;
+  }
+
   #cedula hr { border: 0; border-top: 1px solid #26302a; margin: 0 0 16px; }
   #cedula .ficha { font-size: 12px; color: var(--cal); margin: 0 0 14px; }
   #cedula .texto { font-size: 14px; line-height: 1.65; color: #ccd5cc; margin: 0; }
@@ -137,11 +164,14 @@
 
 <div id="cedula">
   <button id="cerrar" aria-label="Cerrar cédula">×</button>
-  <p class="autor" id="c-autor"></p>
+  
   <h2 id="c-titulo"></h2>
-  <p class="anio" id="c-anio"></p>
+  <p class="autor" id="c-autor"></p>
   <hr>
-  <p class="ficha" id="c-ficha"></p>
+  <p class="ods" id="c-ods"></p>
+
+  <h3 class="ficha" id="c-ficha"></h3>
+  <hr>
   <p class="texto" id="c-texto"></p>
 </div>
 
@@ -160,6 +190,8 @@ import { PointerLockControls } from 'three/addons/controls/PointerLockControls.j
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import { DRACOLoader } from 'three/addons/loaders/DRACOLoader.js';
 import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js';
+
+
 
 /* ════════════════════════════════════════════════════════════
    1. CONFIGURACIÓN GLOBAL
@@ -214,13 +246,13 @@ const SALAS = [
     seguirPiso: true,
     entrada: [0, 2, 4], mirando: 180,
     obras: [
-      { tipo: 'panel', titulo: 'El espejo celula', autor: '¿Si la textura de tu mirada lleva grabada la misma geometría fractal de las barreras de coral y los cráteres de la Tierra, a quién destruyes realmente cuando contaminas la biosfera?', anio: '', ficha: '', texto: ' Al examinar en detalle el iris humano, la ilusión de separación entre la psique y la naturaleza se disuelve. La ecopsicología y los niveles de organización biológica demuestran que las mismas leyes fractales que estructuran los órganos humanos rigen los ecosistemas marinos y terrestres. La psicología cognitiva advierte que el antropocentrismo actúa como un sesgo de desconexión perceptiva: pretendemos proteger la salud mental ignorando que nuestra propia biología es un reflejo microscópico del planeta. Reconocer que la mirada es biológicamente un ecosistema constituye el primer paso para transitar de la indiferencia hacia una verdadera identidad ecológica interconectada.', imagen: './imagenes/sala1/ojo.jpeg',
+      { tipo: 'panel', titulo: 'El espejo celula', autor: '¿Si la textura de tu mirada lleva grabada la misma geometría fractal de las barreras de coral y los cráteres de la Tierra, a quién destruyes realmente cuando contaminas la biosfera?', ods: ['ODS 15 (Vida de ecosistemas terrestres)',' ODS 14 (Vida submarina)','ODS 3 (Salud y bienestar)'], ficha: 'Identidad ecológica', texto: ' Al examinar en detalle el iris humano, la ilusión de separación entre la psique y la naturaleza se disuelve. La ecopsicología y los niveles de organización biológica demuestran que las mismas leyes fractales que estructuran los órganos humanos rigen los ecosistemas marinos y terrestres. La psicología cognitiva advierte que el antropocentrismo actúa como un sesgo de desconexión perceptiva: pretendemos proteger la salud mental ignorando que nuestra propia biología es un reflejo microscópico del planeta. Reconocer que la mirada es biológicamente un ecosistema constituye el primer paso para transitar de la indiferencia hacia una verdadera identidad ecológica interconectada.', imagen: './imagenes/sala1/ojo.jpeg',
         pos: [-5.18, 4.55, 12.71], rotY: 94.8, alto: 2.4 },
-      { tipo: 'panel', titulo: 'Microconectividad', autor: '', anio: '', ficha: '', texto: 'Desde la perspectiva de la ecopsicología y los niveles de organización biológica, la interacción entre el agua y la membrana celular vegetal demuestra la arquitectura interconectada de la vida. La psicología cognitiva tradicional suele fragmentar el estudio de la mente, ignorando que la capacidad adaptativa humana comparte principios de autorregulación con los sistemas biológicos elementales. Esta fotografía cuestiona el egoísmo cognitivo. Entender cómo se relacionan la materia orgánica y el agua nos obliga a reconfigurar la noción de individuo hacia un modelo de interdependencia, donde la salud del cerebro humano es inseparable de la integridad ecológica microscópica', imagen: './imagenes/sala1/hoja.jpeg',
+      { tipo: 'panel', titulo: 'Microconectividad', autor: 'Por qué asumimos que nuestra inteligencia es superior cuando una simple gota sobre una hoja organiza el intercambio de energía que sostiene el aire que respira?', ods: ['ODS 6 (Agua limpia y saneamiento)','ODS 15 (Vida de ecosistemas terrestres)','ODS 13 (Acción por el clima)'], ficha: 'interdependencia sistémica y ecopsicología', texto: 'Desde la perspectiva de la ecopsicología y los niveles de organización biológica, la interacción entre el agua y la membrana celular vegetal demuestra la arquitectura interconectada de la vida. La psicología cognitiva tradicional suele fragmentar el estudio de la mente, ignorando que la capacidad adaptativa humana comparte principios de autorregulación con los sistemas biológicos elementales. Esta fotografía cuestiona el egoísmo cognitivo. Entender cómo se relacionan la materia orgánica y el agua nos obliga a reconfigurar la noción de individuo hacia un modelo de interdependencia, donde la salud del cerebro humano es inseparable de la integridad ecológica microscópica', imagen: './imagenes/sala1/hoja.jpeg',
         pos: [0.88, 4.55, 16.25], rotY: -178.1, alto: 2.4 },
-      { tipo: 'panel', titulo: ' El internet de la tierra', autor: '', anio: '', ficha: '', texto: '', imagen: './imagenes/sala1/wifi.jpeg',
+      { tipo: 'panel', titulo: 'El internet de la tierra', autor: '¿Por qué nos creemos la especie más avanzada si bajo el suelo una red de micelio sostiene la nutrición de todo un bosque sin agotar un solo recurso?', ods: ['ODS 15 (Vida de ecosistemas terrestres)','ODS 13 (Acción por el clima)','ODS 3 (Salud y bienestar)'], ficha: 'Inteligencia colectiva e interdependencia sistémica.', texto: 'La red de micelios demuestra la arquitectura interconectada e inteligente de los sistemas vivos. Desde la ecopsicología y los niveles de organización biológica, esta red de filamentos no representa materia en análisis, sino un sistema de comunicación y transporte de nutrientes entre especies. La psicología cognitiva tradicional suele aislar el estudio de la mente, ignorando que los procesos de adaptación humanos comparten principios con las redes biológicas elementales. Reconocer la complejidad del suelo cuestiona el egocentrismo humano e invita a reconfigurar la noción del "yo" hacia un modelo de interdependencia, donde la salud cerebral es inseparable del equilibrio microbiano terrestre', imagen: './imagenes/sala1/wifi.jpeg',
         pos: [0.35, 4.55, -14.67], rotY: 2.4, alto: 2.4 }, 
-        { tipo: 'panel', titulo: 'LLAMANDO REFLEXIVO', autor: '', anio: '', ficha: '', texto: 'La marca de los dientes en este tronco demuestra cómo el castor altera el tejido vegetal de un organismo para transformar por completo su comunidad y ecosistema. A diferencia del impacto humano, esta modificación favorece la biodiversidad, algo central en el ODS 15 (Vida de ecosistemas terrestres). Al mirar esta imagen desde la psicología, enfrentamos nuestra propia disonancia cognitiva: nos cuesta asumir que las decisiones diarias dañan el entorno. Entender el papel de cadaespecie en la naturaleza es el primer paso para dejar la apatía de lado y empezar a actuar con verdadera empatía ambiental.', imagen: './imagenes/sala1/arboles.jpeg',
+        { tipo: 'panel', titulo: 'LLAMANDO REFLEXIVO', autor: '¿Por qué cuando un animal transforma el bosque decimos que es supervivencia, pero cuando el ser humano lo devasta lo llamamos "progreso"?', ods: ['ODS 15 (Vida de ecosistemas terrestres)'], ficha: '', texto: 'La marca de los dientes en este tronco demuestra cómo el castor altera el tejido vegetal de un organismo para transformar por completo su comunidad y ecosistema. A diferencia del impacto humano, esta modificación favorece la biodiversidad, algo central en el ODS 15 (Vida de ecosistemas terrestres). Al mirar esta imagen desde la psicología, enfrentamos nuestra propia disonancia cognitiva: nos cuesta asumir que las decisiones diarias dañan el entorno. Entender el papel de cadaespecie en la naturaleza es el primer paso para dejar la apatía de lado y empezar a actuar con verdadera empatía ambiental.', imagen: './imagenes/sala1/arboles.jpeg',
         pos: [-2.13, 4.55, -7.77], rotY: 93, alto: 2.4 },
        
     ],
@@ -638,7 +670,7 @@ function pasoLibre(dir, dist) {
 }
 
 function mover(dt) {
-  if (!controles.isLocked || enTransicion) return;
+  if (!controles.isLocked || enTransicion || lecturaActiva) return;
   const v = teclas.has('ShiftLeft') ? CONFIG.velocidadCorriendo : CONFIG.velocidad;
   const paso = v * dt;
   let adelante = 0, lado = 0;
@@ -696,6 +728,7 @@ function mover(dt) {
 const rayo = new THREE.Raycaster();
 const centro = new THREE.Vector2(0, 0);
 let apuntada = null;
+let lecturaActiva = false;   // true mientras la cédula está abierta: congela cámara y teclado
 
 const reticula = document.getElementById('reticula');
 const pista = document.getElementById('pista');
@@ -716,14 +749,48 @@ function detectar() {
 
 function abrirCedula() {
   if (!apuntada) return;
+
   document.getElementById('c-autor').textContent = apuntada.autor || '';
   document.getElementById('c-titulo').textContent = apuntada.titulo || '';
-  document.getElementById('c-anio').textContent = apuntada.anio || '';
   document.getElementById('c-ficha').textContent = apuntada.ficha || '';
   document.getElementById('c-texto').textContent = apuntada.texto || '';
+
+  // Renderizar ODS / Años como Tags
+  const contenedorOds = document.getElementById('c-ods'); // O 'c-anio' según la id en tu HTML
+  contenedorOds.innerHTML = ''; // Limpia los tags anteriores
+
+  if (apuntada.ods) {
+    // Convierte a array si es un arreglo ['ODS 13', 'ODS 15'] o una cadena separada por comas "ODS 13, ODS 15"
+    const listaOds = Array.isArray(apuntada.ods)
+      ? apuntada.ods
+      : apuntada.ods.split(',').map(item => item.trim());
+
+    listaOds.forEach(texto => {
+      if (texto !== '') {
+        const tag = document.createElement('span');
+        tag.className = 'tag';
+        tag.textContent = texto;
+        contenedorOds.appendChild(tag);
+      }
+    });
+  }
+
   cedula.classList.add('visible');
+
+  // Modo lectura: se suelta el puntero (el cursor real del sistema
+  // vuelve a verse) para poder desplazarse por el texto y usar la
+  // barra de scroll; lecturaActiva frena WASD y evita que 'unlock'
+  // muestre el menú, ya que aquí no estamos saliendo a la portada.
+  lecturaActiva = true;
+  teclas.clear();
+  controles.unlock();
 }
-function cerrarCedula() { cedula.classList.remove('visible'); }
+function cerrarCedula() {
+  const estabaLeyendo = lecturaActiva;
+  cedula.classList.remove('visible');
+  lecturaActiva = false;
+  if (estabaLeyendo) controles.lock();   // recupera el control de cámara/WASD
+}
 
 render.domElement.addEventListener('click', () => { if (controles.isLocked) abrirCedula(); });
 document.getElementById('cerrar').addEventListener('click', (e) => { e.stopPropagation(); cerrarCedula(); });
@@ -799,9 +866,9 @@ function actualizarHUD() {
 
 addEventListener('keydown', (e) => {
   teclas.add(e.code);
-  if (e.code === 'KeyE') abrirCedula();
+  if (e.code === 'KeyE') { if (lecturaActiva) cerrarCedula(); else abrirCedula(); }
   if (e.code === 'KeyM' && controles.isLocked) abrirMenu();
-  if (CONFIG.modoEditor && controles.isLocked && !enTransicion) {
+  if (CONFIG.modoEditor && controles.isLocked && !enTransicion && !lecturaActiva) {
     if (e.code === 'KeyP') colocarPanel();
     if (e.code === 'KeyJ') volcar();
     if (e.code === 'KeyB') sondearCapas();
@@ -818,11 +885,23 @@ controles.addEventListener('lock', () => {
   if (CONFIG.modoEditor) hudEditor.style.display = 'block';
 });
 controles.addEventListener('unlock', () => {
+  if (lecturaActiva) return;   // el puntero se soltó a propósito para leer, no vamos al menú
   portada.style.display = 'flex';
   hudEditor.style.display = 'none';
   teclas.clear();          // evita quedar caminando solo al volver del menú
   cerrarCedula();
   actualizarMenu();
+});
+
+/* Si el navegador rechaza el re-bloqueo (p. ej. el "cooldown" de Chrome
+   tras soltar el puntero muy seguido), no dejamos al usuario sin menú
+   ni controles: se muestra la portada como salida de emergencia. */
+document.addEventListener('pointerlockerror', () => {
+  if (!controles.isLocked && !lecturaActiva) {
+    portada.style.display = 'flex';
+    hudEditor.style.display = 'none';
+    actualizarMenu();
+  }
 });
 
 entrarSala(0, true).then(() => {
