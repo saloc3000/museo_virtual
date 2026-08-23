@@ -269,7 +269,7 @@ const SALAS = [
     escala: 1,
     autoCentrar: true,
     seguirPiso: true,
-    entrada: [0.01, 0.60, 0.25], mirando: 180,
+    entrada: [-4,14.83, -11.78], mirando: 180,
     obras: [
     
 
@@ -353,6 +353,7 @@ if (CONFIG.exterior) {
   escena.background = new THREE.Color(0xa8c0cc);
   escena.fog = new THREE.Fog(0xa8c0cc, 25, 110);
   escena.add(new THREE.HemisphereLight(0xcfe3ef, 0x50543c, 1.1));
+  escena.add(new THREE.AmbientLight(0xffffff, 0.5));   // relleno uniforme: evita que superficies casi verticales (ej. hierba) queden negras a contraluz
   const sol = new THREE.DirectionalLight(0xfff2da, 2.4);
   sol.position.set(9, 16, 7);
   sol.castShadow = true;
