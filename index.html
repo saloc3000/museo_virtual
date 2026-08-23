@@ -264,7 +264,7 @@ const SALAS = [
   {
     rotulo: 'Sala II',
     titulo: 'Fracturas y Huella Humana (Crisis Global)',
-    glb: './assets/office.glb',
+    glb: './assets/huella.glb',
     audio: './audios/sala2/ambiente.mp3',
     escala: 1,
     autoCentrar: true,
@@ -311,7 +311,17 @@ const SALAS = [
     autoCentrar: false,
     seguirPiso: false,
     entrada: [1, 0, 2.50], mirando: 180,
-    obras: [],
+    obras: [
+
+    { tipo: 'panel', titulo: 'Soberanía en el concreto', autor: 'Cómo la recuperación comunitaria del suelo urbano puede reducir nuestra dependencia de cadenas de suministro contaminantes', ods: ['ODS 11 (Ciudades y comunidades sostenibles)','ODS 2 (Hambre cero)'], ficha: '', texto: 'La creación de huertas urbanas comunitarias representa una respuesta activa ante la inseguridad alimentaria y la degradación del espacio público. Desde la psicología ambiental, este proceso fomenta la autoeficacia comunitaria y la identidad de lugar, transformando espacios residuales en focos de cohesión social e integración con la naturaleza. Esta solución se alinea directamente con el ODS 11 (Ciudades y comunidades sostenibles) y el ODS 2 (Hambre cero), demostrando cómo la agricultura colectiva fortalece la resiliencia urbana, reduce la huella ecológica y promueve hábitos de consumo locales y conscientes.', imagen: './imagenes/sala4/feliz.jpeg',
+        pos: [0.19, 2.1, 5.11], rotY: -176.1, alto: 1 },
+    { tipo: 'panel', titulo: 'El renacer de la tierra', autor: '¿Somos capaces de sanar las cicatrices que le hemos causado a la naturaleza antes de que sea irreversible?', ods: ['ODS 15 (Vida de ecosistemas terrestres)','ODS 13 (Acción por el clima)'], ficha: '', texto: 'Las acciones directas de reforestación representan la reparación activa del daño ecológico y la reconciliación entre el ser humano y su ecosistema. Este proceso activa la restauración psicológica y la biofilia, fortaleciendo el vínculo afectivo con el entorno y reduciendo la ecoansiedad mediante la acción concreta. La iniciativa se alinea con el ODS 15 (Vida de ecosistemas terrestres) y el ODS 13 (Acción por el clima), evidenciando que la regeneración ambiental es indispensable para frenar la pérdida de biodiversidad y mitigar el deterioro planetario', imagen: './imagenes/sala4/cultivo.jpeg',
+        pos: [-1.54, 2, -0.8], rotY: 43.2, alto: 1 },
+        { tipo: 'panel', titulo: 'La miseria que se esconde bajo el agua ', autor: '¿Utilizamos el activismo social como excusa para no limpiar nuestros mares y si para limpiar nuestras conciencias?', ods: ['ODS 12 (Porduccion y consumo responsable )','ODS 13 (Acción por el clima)','ODS 14 (Vida submarina)'], ficha: 'Desplazamiento del Costo Moral y Ambiental', texto: 'Un cuerpo frágil sumergido entre toneladas de plástico expone una profunda fractura social. Nos acostumbramos a consumir por comodidad, pero la basura nunca desaparece: solo cambia de código postal. Esta escena retrata la cara más cruel de la crisis ambiental: las comunidades que menos contribuyen a la producción masiva de desechos son quienes pagan el costo físico y humano de procesarlos. No es solo contaminación marina; es inequidad global. ¿Qué nos dice esta imagen sobre cómo la pobreza obliga a los más vulnerables a limpiar el desastre que ellos no provocaron? Es momento de asumir la responsabilidad de nuestro consumo', imagen: './imagenes/sala4/recoleccion.jpeg',
+        pos: [-0.12, 2, -3.35], rotY: 0.2, alto: 1   },
+         { tipo: 'panel', titulo: 'Tejiendo la red del entorno', autor: '¿Hasta qué punto la acción colectiva puede transformar la indiferencia individual en responsabilidad compartida?', ods: ['ODS 11 (Ciudades y comunidades sostenibles','ODS 17 (Alianzas para lograr los objetivos)'], ficha: '', texto: 'La organización comunitaria para la restauración ambiental demuestra que el cambio estructural surge de la cohesión social. A través del principio de sentido de comunidad y autoeficacia colectiva, las personas superan la apatía y reconocen su poder de transformación sobre el entorno inmediato. Esta articulación se relaciona estrechamente con el ODS 11 (Ciudades y comunidades sostenibles) y el ODS 17 (Alianzas para lograr los objetivos), mostrando cómo el trabajo colaborativo fortalece el tejido social, promueve la gobernanza local y consolida entornos urbanos más resilientes frente a la crisis climática.', imagen: './imagenes/sala4/rio.jpeg',
+        pos: [-0.03, 2.1, 0.7], rotY: 9.6, alto: 1 },
+    ],
   },
 ];
 
