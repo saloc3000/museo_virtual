@@ -1,0 +1,848 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Museo Virtual</title>
+<style>
+  :root {
+    --tinta: #101512;
+    --papel: #eef2ec;
+    --cal: #8d9a90;
+    --acento: #6f9a3f;
+    --serif: 'Iowan Old Style', 'Palatino Linotype', Palatino, Georgia, serif;
+    --sans: ui-sans-serif, -apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; height: 100%; overflow: hidden; background: var(--tinta); color: var(--papel); font-family: var(--sans); }
+  canvas { display: block; }
+
+  #portada, #transicion {
+    position: fixed; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center;
+    gap: 24px; text-align: center; padding: 32px;
+    background: radial-gradient(120% 90% at 50% 45%, #1b2620 0%, #0a0d0b 100%);
+  }
+  #portada { z-index: 30; overflow-y: auto; }
+  #transicion { z-index: 25; opacity: 0; pointer-events: none; transition: opacity .45s ease; }
+  #transicion.visible { opacity: 1; pointer-events: auto; }
+
+  #portada h1, #transicion h2 { font-family: var(--serif); font-weight: 400; margin: 0; }
+  #portada h1 { font-size: clamp(30px, 6vw, 52px); }
+  #transicion h2 { font-size: clamp(26px, 5vw, 42px); }
+  .rotulo { font-size: 11px; letter-spacing: .22em; text-transform: uppercase; color: var(--acento); margin: 0 0 6px; }
+  #portada .bajada { max-width: 46ch; color: var(--cal); line-height: 1.6; font-size: 14px; margin: 0; }
+
+  /* ---------- Menú de salas ---------- */
+  #menuSalas { display: flex; flex-direction: column; gap: 1px; width: min(420px, 100%); }
+  .sala-btn {
+    display: flex; align-items: center; gap: 16px; width: 100%; text-align: left;
+    font-family: var(--sans); font-size: 14px; color: var(--papel);
+    background: rgba(255,255,255,.03); border: 0; border-left: 2px solid transparent;
+    padding: 15px 18px; cursor: pointer; transition: background .18s, border-color .18s;
+  }
+  .sala-btn:hover:not(:disabled), .sala-btn:focus-visible:not(:disabled) {
+    background: rgba(111,154,63,.14); border-left-color: var(--acento); outline: none;
+  }
+  .sala-btn:disabled { opacity: .35; cursor: progress; }
+  .sala-btn .num { font-family: ui-monospace, Menlo, monospace; font-size: 11px; color: var(--acento); letter-spacing: .05em; }
+  .sala-btn .txt { display: flex; flex-direction: column; gap: 2px; flex: 1; }
+  .sala-btn .txt b { font-weight: 600; font-size: 10px; letter-spacing: .18em; text-transform: uppercase; color: var(--cal); }
+  .sala-btn .txt i { font-style: normal; font-family: var(--serif); font-size: 17px; }
+  .sala-btn .estado { font-size: 9px; letter-spacing: .16em; text-transform: uppercase; color: var(--acento); }
+  .sala-btn.actual { border-left-color: var(--acento); background: rgba(111,154,63,.08); }
+
+  #progreso { font-size: 11px; letter-spacing: .14em; text-transform: uppercase; color: var(--cal); min-height: 14px; }
+  .teclas { display: flex; gap: 8px; flex-wrap: wrap; justify-content: center; }
+  kbd { font-size: 10px; letter-spacing: .09em; text-transform: uppercase; border: 1px solid #333c36; border-radius: 3px; padding: 5px 8px; color: var(--cal); }
+
+  .barra { width: min(260px, 60vw); height: 2px; background: #26302a; overflow: hidden; }
+  .barra i { display: block; height: 100%; width: 0%; background: var(--acento); transition: width .25s ease; }
+
+  #reticula {
+    position: fixed; left: 50%; top: 50%; width: 5px; height: 5px; margin: -2.5px 0 0 -2.5px;
+    border-radius: 50%; background: rgba(238,242,236,.55); z-index: 10; pointer-events: none;
+    transition: transform .18s, background .18s;
+  }
+  #reticula.activa { transform: scale(2.6); background: var(--acento); }
+  #pista {
+    position: fixed; left: 50%; top: calc(50% + 26px); transform: translateX(-50%); z-index: 10;
+    pointer-events: none; font-size: 11px; letter-spacing: .14em; text-transform: uppercase;
+    color: rgba(238,242,236,.85); opacity: 0; transition: opacity .18s; white-space: nowrap;
+    text-shadow: 0 1px 6px rgba(0,0,0,.85);
+  }
+  #pista.visible { opacity: 1; }
+
+  #cedula {
+    position: fixed; right: 28px; top: 50%; transform: translate(24px, -50%);
+    width: min(340px, calc(100vw - 56px)); z-index: 20;
+    background: rgba(10,14,11,.92); backdrop-filter: blur(14px);
+    border-left: 2px solid var(--acento); padding: 26px; opacity: 0; pointer-events: none;
+    transition: opacity .3s, transform .3s;
+  }
+  #cedula.visible { opacity: 1; transform: translate(0, -50%); pointer-events: auto; }
+  #cedula .autor { font-size: 11px; letter-spacing: .18em; text-transform: uppercase; color: var(--acento); margin: 0 0 10px; }
+  #cedula h2 { font-family: var(--serif); font-weight: 400; font-size: 25px; line-height: 1.25; margin: 0 0 4px; }
+  #cedula .anio { font-family: var(--serif); font-style: italic; color: var(--cal); font-size: 16px; margin: 0 0 16px; }
+  #cedula hr { border: 0; border-top: 1px solid #26302a; margin: 0 0 16px; }
+  #cedula .ficha { font-size: 12px; color: var(--cal); margin: 0 0 14px; }
+  #cedula .texto { font-size: 14px; line-height: 1.65; color: #ccd5cc; margin: 0; }
+  #cerrar { position: absolute; top: 14px; right: 14px; background: none; border: 0; cursor: pointer; color: var(--cal); font-size: 20px; }
+  #cerrar:hover { color: var(--papel); }
+
+  #rotuloSala {
+    position: fixed; left: 22px; top: 20px; z-index: 10; pointer-events: none;
+    font-size: 10px; letter-spacing: .2em; text-transform: uppercase; color: rgba(238,242,236,.5);
+    text-shadow: 0 1px 6px rgba(0,0,0,.8);
+  }
+  #ayuda { position: fixed; left: 22px; bottom: 20px; z-index: 10; pointer-events: none;
+    font-size: 10px; letter-spacing: .13em; text-transform: uppercase; color: rgba(238,242,236,.32); }
+
+  #editor {
+    position: fixed; right: 18px; bottom: 18px; z-index: 15; pointer-events: none; display: none;
+    font-family: ui-monospace, 'SF Mono', Menlo, Consolas, monospace; font-size: 11px; line-height: 1.7;
+    background: rgba(10,14,11,.82); border: 1px solid #26302a; border-left: 2px solid var(--acento);
+    padding: 12px 14px; color: #b8c4ba; white-space: pre;
+  }
+  #editor b { color: var(--acento); font-weight: 600; }
+  @media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
+</style>
+</head>
+<body>
+
+<div id="portada">
+  <div>
+    <h1>Museo Virtual</h1>
+    <p class="bajada">Elige una sala para entrar. Dentro, acércate a un panel y míralo para leer su cédula.</p>
+  </div>
+  <div id="menuSalas"></div>
+  <div id="progreso">Cargando…</div>
+  <div class="teclas">
+    <kbd>W A S D — caminar</kbd><kbd>E — leer</kbd><kbd>M o Esc — menú</kbd>
+  </div>
+</div>
+
+<div id="transicion">
+  <div>
+    <p class="rotulo" id="t-rotulo"></p>
+    <h2 id="t-titulo"></h2>
+  </div>
+  <div class="barra"><i id="t-barra"></i></div>
+</div>
+
+<div id="reticula"></div>
+<div id="pista"></div>
+<div id="rotuloSala"></div>
+<div id="ayuda">W A S D · Shift correr · F vuelo · G colisión · M menú</div>
+<div id="editor"></div>
+
+<div id="cedula">
+  <button id="cerrar" aria-label="Cerrar cédula">×</button>
+  <p class="autor" id="c-autor"></p>
+  <h2 id="c-titulo"></h2>
+  <p class="anio" id="c-anio"></p>
+  <hr>
+  <p class="ficha" id="c-ficha"></p>
+  <p class="texto" id="c-texto"></p>
+</div>
+
+<script type="importmap">
+{
+  "imports": {
+    "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js",
+    "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"
+  }
+}
+</script>
+
+<script type="module">
+import * as THREE from 'three';
+import { PointerLockControls } from 'three/addons/controls/PointerLockControls.js';
+import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
+import { DRACOLoader } from 'three/addons/loaders/DRACOLoader.js';
+import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js';
+
+/* ════════════════════════════════════════════════════════════
+   1. CONFIGURACIÓN GLOBAL
+   ────────────────────────────────────────────────────────────
+   autoCentrar y seguirPiso se pueden sobrescribir por sala.
+   ════════════════════════════════════════════════════════════ */
+
+const CONFIG = {
+  modoEditor: true,          // HUD + teclas P, J, F, G, B
+  exterior: true,            // luz de cielo; false para salas cerradas
+  luzSobreObras: true,
+  autoCentrar: true,
+  seguirPiso: true,
+
+  volar: false,              // F: alterna. Espacio sube, C baja
+  colisiones: true,          // G: apagar para atravesar muros
+  velocidadVertical: 3.5,
+
+  alturaOjos: 1.65,
+  velocidad: 3.2,
+  velocidadCorriendo: 6.0,
+  distanciaLectura: 4.0,
+
+  radioColision: 0.38,
+  alturasColision: [0.45, 1.45],
+
+  precargarSiguiente: true,
+  esperaPrecarga: 8000,
+};
+
+/* ════════════════════════════════════════════════════════════
+   2. LAS SALAS
+   ────────────────────────────────────────────────────────────
+   autoCentrar: centra el GLB en X/Z y apoya su punto más bajo
+     en y=0. Falla cuando el modelo trae terreno, cimientos o
+     una cubierta que el bounding box toma como "fondo".
+
+   seguirPiso: false fija tu altura en entrada[1] + alturaOjos y
+     no lanza ningún rayo hacia abajo. Es lo correcto en salas
+     planas y la salida cuando el raycast se confunde de capa.
+     Con false, entrada[1] es la altura del suelo — si apareces
+     flotando o hundido, ajusta ese número y recarga.
+   ════════════════════════════════════════════════════════════ */
+
+const SALAS = [
+  {
+    rotulo: 'Sala I',
+    titulo: 'Invernadero',
+    glb: './assets/grenhouse.glb',
+    escala: 1,
+    autoCentrar: true,
+    seguirPiso: true,
+    entrada: [0, 2, 4], mirando: 180,
+    obras: [
+      { tipo: 'panel', titulo: 'Panel 1', autor: '', anio: '', ficha: '', texto: '', imagen: null,
+        pos: [-5.18, 4.55, 12.71], rotY: 94.8, alto: 2.4 },
+      { tipo: 'panel', titulo: 'Panel 2', autor: '', anio: '', ficha: '', texto: '', imagen: null,
+        pos: [0.88, 4.55, 16.25], rotY: -178.1, alto: 2.4 },
+      { tipo: 'panel', titulo: 'Panel 3', autor: '', anio: '', ficha: '', texto: '', imagen: null,
+        pos: [0.35, 4.55, -14.67], rotY: 2.4, alto: 2.4 },
+    ],
+  },
+  {
+    rotulo: 'Sala II',
+    titulo: 'Abandonado',
+    glb: './assets/office.glb',
+    escala: 1,
+    autoCentrar: true,
+    seguirPiso: true,
+    entrada: [0.01, 0.60, 0.25], mirando: 180,
+    obras: [],
+  },
+  {
+    rotulo: 'Sala III',
+    titulo: 'Restaurante',
+    glb: './assets/restaurante.glb',
+    escala: 0.01,
+    autoCentrar: true,
+    seguirPiso: false,          // altura fija: el raycast tomaba la cubierta
+    entrada: [0.39, 0.08, 0.10], mirando: -75,
+    obras: [],
+  },
+  {
+    rotulo: 'Sala IV',
+    titulo: 'Cuarta sala',
+    glb: './assets/sala2.glb',
+    escala: 1,
+    autoCentrar: true,
+    seguirPiso: true,
+    entrada: [0, 0, 3], mirando: 180,
+    obras: [],
+  },
+];
+
+/* ════════════════════════════════════════════════════════════
+   3. ESCENA Y LUZ (globales, sobreviven al cambio de sala)
+   ════════════════════════════════════════════════════════════ */
+
+const escena = new THREE.Scene();
+const camara = new THREE.PerspectiveCamera(62, innerWidth / innerHeight, 0.05, 300);
+camara.rotation.order = 'YXZ';
+
+const render = new THREE.WebGLRenderer({ antialias: true, powerPreference: 'high-performance' });
+render.setSize(innerWidth, innerHeight);
+render.setPixelRatio(Math.min(devicePixelRatio, 2));
+render.outputColorSpace = THREE.SRGBColorSpace;
+render.toneMapping = THREE.ACESFilmicToneMapping;
+render.toneMappingExposure = 1.0;
+render.shadowMap.enabled = true;
+render.shadowMap.type = THREE.PCFSoftShadowMap;
+document.body.appendChild(render.domElement);
+
+const pmrem = new THREE.PMREMGenerator(render);
+escena.environment = pmrem.fromScene(new RoomEnvironment(), 0.04).texture;
+
+if (CONFIG.exterior) {
+  escena.background = new THREE.Color(0xa8c0cc);
+  escena.fog = new THREE.Fog(0xa8c0cc, 25, 110);
+  escena.add(new THREE.HemisphereLight(0xcfe3ef, 0x50543c, 1.1));
+  const sol = new THREE.DirectionalLight(0xfff2da, 2.4);
+  sol.position.set(9, 16, 7);
+  sol.castShadow = true;
+  sol.shadow.mapSize.set(2048, 2048);
+  sol.shadow.camera.left = -25; sol.shadow.camera.right = 25;
+  sol.shadow.camera.top = 25; sol.shadow.camera.bottom = -25;
+  sol.shadow.camera.far = 60; sol.shadow.bias = -0.0005;
+  escena.add(sol);
+} else {
+  escena.background = new THREE.Color(0x0d0b0a);
+  escena.add(new THREE.HemisphereLight(0xf4ecdf, 0x2b2622, 0.6));
+}
+
+/* ════════════════════════════════════════════════════════════
+   4. CARGA Y LIBERACIÓN DE GLB
+   ════════════════════════════════════════════════════════════ */
+
+const draco = new DRACOLoader();
+draco.setDecoderPath('https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/libs/draco/');
+const cargadorGLB = new GLTFLoader();
+cargadorGLB.setDRACOLoader(draco);
+
+const precargadas = new Map();
+const enVuelo = new Map();
+
+function cargarGLB(url, onProgreso) {
+  if (precargadas.has(url)) return Promise.resolve(precargadas.get(url));
+  if (enVuelo.has(url)) return enVuelo.get(url);
+  const p = new Promise((resolve, reject) => {
+    cargadorGLB.load(url, (gltf) => resolve(gltf.scene), (xhr) => {
+      if (onProgreso && xhr.total) onProgreso(xhr.loaded / xhr.total);
+    }, reject);
+  }).finally(() => enVuelo.delete(url));
+  enVuelo.set(url, p);
+  return p;
+}
+
+/* Quitar de la escena NO devuelve la memoria de GPU. */
+function liberar(raiz) {
+  if (!raiz) return;
+  raiz.traverse((o) => {
+    if (!o.isMesh) return;
+    o.geometry?.dispose();
+    const materiales = Array.isArray(o.material) ? o.material : [o.material];
+    for (const m of materiales) {
+      if (!m) continue;
+      for (const clave in m) {
+        const valor = m[clave];
+        if (valor && valor.isTexture) valor.dispose();
+      }
+      m.dispose();
+    }
+  });
+  raiz.removeFromParent();
+}
+
+/* ════════════════════════════════════════════════════════════
+   5. CONSTRUCCIÓN DE UNA SALA
+   ════════════════════════════════════════════════════════════ */
+
+let raizSala = null;
+let indiceSala = -1;
+let colisionables = [];
+let cuadros = [];
+let enTransicion = true;
+
+function registrarColisiones(raiz) {
+  const colliders = [];
+  raiz.traverse((o) => { if (o.isMesh && /collider/i.test(o.name)) colliders.push(o); });
+  if (colliders.length) {
+    for (const c of colliders) { c.visible = false; colisionables.push(c); }
+  } else {
+    raiz.traverse((o) => { if (o.isMesh) colisionables.push(o); });
+  }
+}
+
+function texturaMarcador(obra) {
+  const c = document.createElement('canvas');
+  c.width = 900; c.height = 1150;
+  const x = c.getContext('2d');
+  x.fillStyle = '#e4e7dd'; x.fillRect(0, 0, c.width, c.height);
+  x.strokeStyle = '#b6bfae'; x.lineWidth = 3; x.strokeRect(40, 40, c.width - 80, c.height - 80);
+  x.fillStyle = '#5a6355'; x.textAlign = 'center';
+  x.font = 'italic 46px Georgia, serif';
+  x.fillText(obra.titulo, c.width / 2, c.height / 2 - 20);
+  x.font = '30px Helvetica, Arial, sans-serif';
+  x.fillText(obra.autor, c.width / 2, c.height / 2 + 40);
+  x.font = '22px Helvetica, Arial, sans-serif'; x.fillStyle = '#8d9a90';
+  x.fillText('imagen pendiente', c.width / 2, c.height - 90);
+  const t = new THREE.CanvasTexture(c);
+  t.colorSpace = THREE.SRGBColorSpace;
+  return t;
+}
+
+/* Materiales por sala, nunca compartidos: si se compartieran,
+   liberar una sala rompería la siguiente. */
+function montarObra(obra, padre) {
+  const grupo = new THREE.Group();
+  grupo.position.fromArray(obra.pos);
+  grupo.rotation.y = THREE.MathUtils.degToRad(obra.rotY || 0);
+
+  const alto = obra.alto || 1.4;
+  const esPanel = (obra.tipo || 'panel') === 'panel';
+  const matEstructura = new THREE.MeshStandardMaterial({ color: 0x2c322c, roughness: 0.45, metalness: 0.55 });
+
+  const colocar = (tex, aspecto) => {
+    const ancho = alto * aspecto;
+    tex.colorSpace = THREE.SRGBColorSpace;
+    tex.anisotropy = render.capabilities.getMaxAnisotropy();
+
+    const lienzo = new THREE.Mesh(
+      new THREE.PlaneGeometry(ancho, alto),
+      new THREE.MeshStandardMaterial({ map: tex, roughness: 0.9 })
+    );
+    lienzo.position.z = 0.045;
+    lienzo.userData.obra = obra;
+    grupo.add(lienzo);
+    cuadros.push(lienzo);
+
+    const marco = new THREE.Mesh(new THREE.BoxGeometry(ancho + 0.09, alto + 0.09, 0.06), matEstructura);
+    marco.castShadow = true;
+    grupo.add(marco);
+
+    if (esPanel) {
+      const largoPata = obra.pos[1] - alto / 2;
+      if (largoPata > 0.1) {
+        for (const lado of [-1, 1]) {
+          const pata = new THREE.Mesh(new THREE.CylinderGeometry(0.028, 0.028, largoPata, 10), matEstructura);
+          pata.position.set(lado * (ancho / 2 - 0.1), -alto / 2 - largoPata / 2, 0);
+          pata.castShadow = true;
+          grupo.add(pata);
+        }
+        const reverso = new THREE.Mesh(
+          new THREE.PlaneGeometry(ancho, alto),
+          new THREE.MeshStandardMaterial({ color: 0x333a33, roughness: 0.85 })
+        );
+        reverso.position.z = -0.04; reverso.rotation.y = Math.PI;
+        grupo.add(reverso);
+      }
+    }
+
+    if (CONFIG.luzSobreObras) {
+      const foco = new THREE.SpotLight(0xfff4e2, 9, 6, Math.PI / 7, 0.6, 1.6);
+      foco.position.set(0, alto / 2 + 1.0, 1.2);
+      foco.target = lienzo;
+      grupo.add(foco);
+    }
+  };
+
+  if (obra.imagen) {
+    new THREE.TextureLoader().load(obra.imagen,
+      (tex) => colocar(tex, tex.image.width / tex.image.height),
+      undefined,
+      () => colocar(texturaMarcador(obra), 900 / 1150));
+  } else {
+    colocar(texturaMarcador(obra), 900 / 1150);
+  }
+
+  padre.add(grupo);
+  return grupo;
+}
+
+/* ════════════════════════════════════════════════════════════
+   6. CAMBIO DE SALA
+   ════════════════════════════════════════════════════════════ */
+
+const transicion = document.getElementById('transicion');
+const tRotulo = document.getElementById('t-rotulo');
+const tTitulo = document.getElementById('t-titulo');
+const tBarra = document.getElementById('t-barra');
+const rotuloSala = document.getElementById('rotuloSala');
+const progreso = document.getElementById('progreso');
+
+const espera = (ms) => new Promise(r => setTimeout(r, ms));
+let temporizadorPrecarga = null;
+
+/* silencioso: la primera carga ocurre con el menú al frente,
+   así que el progreso se muestra en el menú y no en la transición. */
+async function entrarSala(indice, silencioso = false) {
+  const sala = SALAS[indice];
+  if (!sala) return;
+
+  enTransicion = true;
+  clearTimeout(temporizadorPrecarga);
+  cerrarCedula();
+
+  if (!silencioso) {
+    tRotulo.textContent = sala.rotulo;
+    tTitulo.textContent = sala.titulo;
+    tBarra.style.width = '0%';
+    transicion.classList.add('visible');
+    await espera(450);
+  }
+
+  liberar(raizSala);
+  raizSala = null;
+  colisionables = []; cuadros = []; apuntada = null;
+
+  let modelo;
+  try {
+    modelo = await cargarGLB(sala.glb, (f) => {
+      const pct = Math.round(f * 100);
+      if (silencioso) progreso.textContent = `Cargando ${sala.rotulo} · ${pct}%`;
+      else tBarra.style.width = `${pct}%`;
+    });
+  } catch (err) {
+    console.error(`No se pudo cargar ${sala.glb}`, err);
+    const aviso = `No se encontró ${sala.glb}`;
+    if (silencioso) progreso.textContent = aviso;
+    else { tTitulo.textContent = 'No se encontró el modelo'; tRotulo.textContent = sala.glb; }
+    enTransicion = false;
+    return;
+  }
+  precargadas.delete(sala.glb);
+
+  raizSala = new THREE.Group();
+  modelo.scale.setScalar(sala.escala || 1);
+  modelo.traverse((o) => { if (o.isMesh) { o.castShadow = true; o.receiveShadow = true; } });
+
+  const centrar = sala.autoCentrar ?? CONFIG.autoCentrar;
+  if (centrar) {
+    const caja = new THREE.Box3().setFromObject(modelo);
+    const centro = caja.getCenter(new THREE.Vector3());
+    modelo.position.x -= centro.x;
+    modelo.position.z -= centro.z;
+    modelo.position.y -= caja.min.y;
+  }
+
+  raizSala.add(modelo);
+  escena.add(raizSala);
+  window.raizSala = raizSala;   // depuración
+  registrarColisiones(modelo);
+  (sala.obras || []).forEach(o => montarObra(o, raizSala));
+
+  camara.position.set(sala.entrada[0], sala.entrada[1] + CONFIG.alturaOjos, sala.entrada[2]);
+  camara.rotation.set(0, THREE.MathUtils.degToRad(sala.mirando || 0), 0);
+  alturaPiso = sala.entrada[1];
+
+  indiceSala = indice;
+  rotuloSala.textContent = `${sala.rotulo} — ${sala.titulo}`;
+  colocados.obras.length = 0;      // el editor arranca limpio en cada sala
+  actualizarMenu();
+  if (CONFIG.modoEditor) diagnosticar(modelo, sala, centrar);
+
+  if (!silencioso) {
+    tBarra.style.width = '100%';
+    await espera(250);
+    transicion.classList.remove('visible');
+  }
+  enTransicion = false;
+
+  if (CONFIG.precargarSiguiente) {
+    temporizadorPrecarga = setTimeout(precargarSiguiente, CONFIG.esperaPrecarga);
+  }
+}
+
+function precargarSiguiente() {
+  const siguiente = SALAS[(indiceSala + 1) % SALAS.length];
+  if (!siguiente || siguiente.glb === SALAS[indiceSala].glb) return;
+  const url = siguiente.glb;
+  if (precargadas.has(url) || enVuelo.has(url)) return;
+  cargarGLB(url).then((scene) => precargadas.set(url, scene)).catch(() => {});
+  for (const [u, scene] of precargadas) {
+    if (u !== url) { liberar(scene); precargadas.delete(u); }
+  }
+}
+
+function diagnosticar(modelo, sala, centrado) {
+  const caja = new THREE.Box3().setFromObject(modelo);
+  const t = caja.getSize(new THREE.Vector3());
+  let tris = 0; const nombres = [];
+  modelo.traverse((o) => {
+    if (!o.isMesh) return;
+    nombres.push(o.name || '(sin nombre)');
+    const g = o.geometry;
+    tris += (g.index ? g.index.count : g.attributes.position.count) / 3;
+  });
+  const sigue = sala.seguirPiso ?? CONFIG.seguirPiso;
+  console.log(`%c${sala.rotulo} · ${t.x.toFixed(1)} × ${t.y.toFixed(1)} × ${t.z.toFixed(1)} m · ${Math.round(tris).toLocaleString()} tri · ${nombres.length} mallas · ${centrado ? 'centrado' : 'sin centrar'} · ${sigue ? 'sigue piso' : 'altura fija'}`,
+    'color:#6f9a3f;font-weight:bold');
+  console.log(`   y del modelo: de ${caja.min.y.toFixed(2)} a ${caja.max.y.toFixed(2)}`);
+}
+
+/* ════════════════════════════════════════════════════════════
+   7. MENÚ DE SALAS
+   ════════════════════════════════════════════════════════════ */
+
+const portada = document.getElementById('portada');
+const menuSalas = document.getElementById('menuSalas');
+const botones = [];
+
+SALAS.forEach((sala, i) => {
+  const b = document.createElement('button');
+  b.className = 'sala-btn';
+  b.disabled = true;
+  b.innerHTML =
+    `<span class="num">${String(i + 1).padStart(2, '0')}</span>` +
+    `<span class="txt"><b>${sala.rotulo}</b><i>${sala.titulo}</i></span>` +
+    `<span class="estado"></span>`;
+  b.addEventListener('click', () => seleccionarSala(i));
+  menuSalas.appendChild(b);
+  botones.push(b);
+});
+
+function actualizarMenu() {
+  botones.forEach((b, i) => {
+    b.classList.toggle('actual', i === indiceSala);
+    b.querySelector('.estado').textContent = i === indiceSala ? 'Actual' : '';
+  });
+}
+
+/* El bloqueo del puntero necesita un gesto del usuario, así que se pide
+   dentro del click; la carga viene después, con el puntero ya bloqueado. */
+function seleccionarSala(i) {
+  if (enTransicion) return;
+  controles.lock();
+  if (i !== indiceSala) entrarSala(i);
+}
+
+function abrirMenu() {
+  controles.unlock();   // el evento 'unlock' muestra la portada
+}
+
+/* ════════════════════════════════════════════════════════════
+   8. MOVIMIENTO
+   ════════════════════════════════════════════════════════════ */
+
+const controles = new PointerLockControls(camara, render.domElement);
+const teclas = new Set();
+const reloj = new THREE.Clock();
+
+const rayoCol = new THREE.Raycaster();
+const rayoPiso = new THREE.Raycaster();
+const frente = new THREE.Vector3();
+const lateral = new THREE.Vector3();
+const desplaz = new THREE.Vector3();
+const origen = new THREE.Vector3();
+const direccion = new THREE.Vector3();
+const abajo = new THREE.Vector3(0, -1, 0);
+let alturaPiso = 0;
+
+function pasoLibre(dir, dist) {
+  if (!CONFIG.colisiones) return true;
+  const alcance = dist + CONFIG.radioColision;
+  for (const h of CONFIG.alturasColision) {
+    origen.copy(camara.position);
+    // Volando, los rayos salen de la cámara, no del piso.
+    origen.y = CONFIG.volar ? camara.position.y - 0.2 : alturaPiso + h;
+    rayoCol.set(origen, dir);
+    rayoCol.far = alcance;
+    if (rayoCol.intersectObjects(colisionables, false).length) return false;
+  }
+  return true;
+}
+
+function mover(dt) {
+  if (!controles.isLocked || enTransicion) return;
+  const v = teclas.has('ShiftLeft') ? CONFIG.velocidadCorriendo : CONFIG.velocidad;
+  const paso = v * dt;
+  let adelante = 0, lado = 0;
+  if (teclas.has('KeyW') || teclas.has('ArrowUp')) adelante += 1;
+  if (teclas.has('KeyS') || teclas.has('ArrowDown')) adelante -= 1;
+  if (teclas.has('KeyD') || teclas.has('ArrowRight')) lado += 1;
+  if (teclas.has('KeyA') || teclas.has('ArrowLeft')) lado -= 1;
+
+  if (adelante || lado) {
+    camara.getWorldDirection(frente); frente.y = 0; frente.normalize();
+    lateral.crossVectors(frente, camara.up).normalize();
+    desplaz.set(0, 0, 0)
+      .addScaledVector(frente, adelante)
+      .addScaledVector(lateral, lado)
+      .normalize().multiplyScalar(paso);
+
+    if (Math.abs(desplaz.x) > 1e-5) {
+      direccion.set(Math.sign(desplaz.x), 0, 0);
+      if (pasoLibre(direccion, Math.abs(desplaz.x))) camara.position.x += desplaz.x;
+    }
+    if (Math.abs(desplaz.z) > 1e-5) {
+      direccion.set(0, 0, Math.sign(desplaz.z));
+      if (pasoLibre(direccion, Math.abs(desplaz.z))) camara.position.z += desplaz.z;
+    }
+  }
+
+  // El seguimiento de piso se decide por sala.
+  const sigueSuelo = SALAS[indiceSala]?.seguirPiso ?? CONFIG.seguirPiso;
+
+  if (CONFIG.volar) {
+    // En vuelo la altura la manejas tú: nada de raycast.
+    const vv = CONFIG.velocidadVertical * dt;
+    if (teclas.has('Space')) camara.position.y += vv;
+    if (teclas.has('KeyC')) camara.position.y -= vv;
+  } else if (sigueSuelo) {
+    // El rayo sale de 30 cm sobre el piso conocido: así no puede
+    // tomar una mesa o un respaldo como si fueran suelo.
+    origen.copy(camara.position); origen.y = alturaPiso + 0.3;
+    rayoPiso.set(origen, abajo); rayoPiso.far = 2.5;
+    const suelo = rayoPiso.intersectObjects(colisionables, false);
+    if (suelo.length && Math.abs(suelo[0].point.y - alturaPiso) < 0.6) {
+      alturaPiso = suelo[0].point.y;
+    }
+    camara.position.y += (alturaPiso + CONFIG.alturaOjos - camara.position.y) * Math.min(1, dt * 12);
+  } else {
+    // Altura fija: alturaPiso quedó en entrada[1] al cargar la sala.
+    camara.position.y = alturaPiso + CONFIG.alturaOjos;
+  }
+}
+
+/* ════════════════════════════════════════════════════════════
+   9. CÉDULAS
+   ════════════════════════════════════════════════════════════ */
+
+const rayo = new THREE.Raycaster();
+const centro = new THREE.Vector2(0, 0);
+let apuntada = null;
+
+const reticula = document.getElementById('reticula');
+const pista = document.getElementById('pista');
+const cedula = document.getElementById('cedula');
+
+function detectar() {
+  if (!controles.isLocked || enTransicion) return;
+  rayo.setFromCamera(centro, camara);
+  rayo.far = CONFIG.distanciaLectura;
+  const golpes = rayo.intersectObjects(cuadros, false);
+  const nueva = golpes.length ? golpes[0].object.userData.obra : null;
+  if (nueva === apuntada) return;
+  apuntada = nueva;
+  reticula.classList.toggle('activa', !!apuntada);
+  pista.classList.toggle('visible', !!apuntada);
+  if (apuntada) pista.textContent = `${apuntada.titulo} — E para leer`;
+}
+
+function abrirCedula() {
+  if (!apuntada) return;
+  document.getElementById('c-autor').textContent = apuntada.autor || '';
+  document.getElementById('c-titulo').textContent = apuntada.titulo || '';
+  document.getElementById('c-anio').textContent = apuntada.anio || '';
+  document.getElementById('c-ficha').textContent = apuntada.ficha || '';
+  document.getElementById('c-texto').textContent = apuntada.texto || '';
+  cedula.classList.add('visible');
+}
+function cerrarCedula() { cedula.classList.remove('visible'); }
+
+render.domElement.addEventListener('click', () => { if (controles.isLocked) abrirCedula(); });
+document.getElementById('cerrar').addEventListener('click', (e) => { e.stopPropagation(); cerrarCedula(); });
+
+/* ════════════════════════════════════════════════════════════
+   10. MODO EDITOR
+   ════════════════════════════════════════════════════════════ */
+
+const hudEditor = document.getElementById('editor');
+const colocados = { obras: [] };
+
+function posicionDelante(metros = 2) {
+  camara.getWorldDirection(frente); frente.y = 0; frente.normalize();
+  const p = camara.position.clone().addScaledVector(frente, metros);
+  const rotY = THREE.MathUtils.radToDeg(Math.atan2(-frente.x, -frente.z));
+  return { p, rotY: +rotY.toFixed(1) };
+}
+
+function colocarPanel() {
+  if (!raizSala) return;
+  const { p, rotY } = posicionDelante(2);
+  // Volando, el panel va a la altura de la cámara; a pie, a 1.55 m sobre el piso.
+  const altura = CONFIG.volar ? +camara.position.y.toFixed(2) : +(alturaPiso + 1.55).toFixed(2);
+  const obra = {
+    tipo: 'panel', titulo: `Panel ${colocados.obras.length + 1}`, autor: 'Por definir',
+    anio: '', ficha: '', texto: '', imagen: null,
+    pos: [+p.x.toFixed(2), altura, +p.z.toFixed(2)], rotY, alto: 1.4,
+  };
+  montarObra(obra, raizSala);
+  colocados.obras.push(obra);
+  console.log('%c✓ panel', 'color:#6f9a3f', `pos: [${obra.pos.join(', ')}], rotY: ${rotY},`);
+}
+
+function volcar() {
+  const texto = colocados.obras.map(o =>
+    `      { tipo: 'panel', titulo: '${o.titulo}', autor: '', anio: '', ficha: '', texto: '', imagen: null,\n        pos: [${o.pos.join(', ')}], rotY: ${o.rotY}, alto: ${o.alto} },`
+  ).join('\n');
+  console.log(`%cPega esto en las obras de SALAS[${indiceSala}]:`, 'color:#6f9a3f;font-weight:bold');
+  console.log(texto || '(todavía no has colocado paneles en esta sala)');
+  navigator.clipboard?.writeText(texto).catch(() => {});
+}
+
+/* Tecla B: lista todas las superficies que hay debajo de ti, de arriba
+   hacia abajo. Sirve para saber en qué capa estás parado. */
+function sondearCapas() {
+  const o = camara.position.clone(); o.y += 30;
+  const r = new THREE.Raycaster(o, abajo);
+  r.far = 80;
+  const hits = r.intersectObjects(colisionables, false);
+  console.log('%cCapas debajo de ti (de arriba hacia abajo):', 'color:#6f9a3f;font-weight:bold');
+  if (!hits.length) console.log('  ninguna');
+  hits.forEach(h => console.log(`  y = ${h.point.y.toFixed(2)}   ${h.object.name || '(sin nombre)'}`));
+  console.log(`  tú estás en y = ${camara.position.y.toFixed(2)}`);
+}
+
+function actualizarHUD() {
+  if (!CONFIG.modoEditor || !controles.isLocked || enTransicion) return;
+  const { rotY } = posicionDelante(0);
+  const sigueSuelo = SALAS[indiceSala]?.seguirPiso ?? CONFIG.seguirPiso;
+  hudEditor.innerHTML =
+    `sala ${indiceSala}  ${SALAS[indiceSala]?.rotulo || ''}\n` +
+    `x ${camara.position.x.toFixed(2)}  y ${camara.position.y.toFixed(2)}  z ${camara.position.z.toFixed(2)}\n` +
+    `rotY ${rotY}°   piso ${alturaPiso.toFixed(2)}   ${sigueSuelo ? 'sigue' : 'fijo'}\n` +
+    `entrada: [${camara.position.x.toFixed(2)}, ${alturaPiso.toFixed(2)}, ${camara.position.z.toFixed(2)}]\n` +
+    `paneles ${colocados.obras.length}\n` +
+    `${CONFIG.volar ? '✈ vuelo' : '· a pie'}    ${CONFIG.colisiones ? '■ sólido' : '□ traspasa'}\n` +
+    `<b>P</b> panel  <b>J</b> volcar  <b>F</b> vuelo  <b>G</b> colisión  <b>B</b> capas`;
+}
+
+/* ════════════════════════════════════════════════════════════
+   11. ARRANQUE
+   ════════════════════════════════════════════════════════════ */
+
+addEventListener('keydown', (e) => {
+  teclas.add(e.code);
+  if (e.code === 'KeyE') abrirCedula();
+  if (e.code === 'KeyM' && controles.isLocked) abrirMenu();
+  if (CONFIG.modoEditor && controles.isLocked && !enTransicion) {
+    if (e.code === 'KeyP') colocarPanel();
+    if (e.code === 'KeyJ') volcar();
+    if (e.code === 'KeyB') sondearCapas();
+    if (e.code === 'KeyF') CONFIG.volar = !CONFIG.volar;
+    if (e.code === 'KeyG') CONFIG.colisiones = !CONFIG.colisiones;
+    // Sin esto, el Espacio dispararía el botón del menú que quedó con el foco.
+    if (e.code === 'Space') e.preventDefault();
+  }
+});
+addEventListener('keyup', (e) => teclas.delete(e.code));
+
+controles.addEventListener('lock', () => {
+  portada.style.display = 'none';
+  if (CONFIG.modoEditor) hudEditor.style.display = 'block';
+});
+controles.addEventListener('unlock', () => {
+  portada.style.display = 'flex';
+  hudEditor.style.display = 'none';
+  teclas.clear();          // evita quedar caminando solo al volver del menú
+  cerrarCedula();
+  actualizarMenu();
+});
+
+entrarSala(0, true).then(() => {
+  progreso.textContent = 'Elige una sala';
+  botones.forEach(b => b.disabled = false);
+  actualizarMenu();
+  botones[0].focus();
+});
+
+addEventListener('resize', () => {
+  camara.aspect = innerWidth / innerHeight;
+  camara.updateProjectionMatrix();
+  render.setSize(innerWidth, innerHeight);
+});
+
+function bucle() {
+  requestAnimationFrame(bucle);
+  mover(reloj.getDelta());
+  detectar();
+  actualizarHUD();
+  render.render(escena, camara);
+}
+bucle();
+</script>
+</body>
+</html>

@@ -132,7 +132,7 @@
 <div id="reticula"></div>
 <div id="pista"></div>
 <div id="rotuloSala"></div>
-<div id="ayuda">W A S D · Shift correr · M menú de salas</div>
+<div id="ayuda">W A S D · Shift correr · F vuelo · G colisión · M menú</div>
 <div id="editor"></div>
 
 <div id="cedula">
@@ -162,14 +162,21 @@ import { DRACOLoader } from 'three/addons/loaders/DRACOLoader.js';
 import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js';
 
 /* ════════════════════════════════════════════════════════════
-   1. CONFIGURACIÓN
+   1. CONFIGURACIÓN GLOBAL
+   ────────────────────────────────────────────────────────────
+   autoCentrar y seguirPiso se pueden sobrescribir por sala.
    ════════════════════════════════════════════════════════════ */
 
 const CONFIG = {
-  modoEditor: true,          // HUD + tecla P (colocar panel) y J (volcar)
+  modoEditor: true,          // HUD + teclas P, J, F, G, B
   exterior: true,            // luz de cielo; false para salas cerradas
   luzSobreObras: true,
   autoCentrar: true,
+  seguirPiso: true,
+
+  volar: false,              // F: alterna. Espacio sube, C baja
+  colisiones: true,          // G: apagar para atravesar muros
+  velocidadVertical: 3.5,
 
   alturaOjos: 1.65,
   velocidad: 3.2,
@@ -178,14 +185,23 @@ const CONFIG = {
 
   radioColision: 0.38,
   alturasColision: [0.45, 1.45],
-  seguirPiso: true,
 
-  precargarSiguiente: true,  // baja la sala siguiente del listado en segundo plano
+  precargarSiguiente: true,
   esperaPrecarga: 8000,
 };
 
 /* ════════════════════════════════════════════════════════════
-   2. LAS SALAS — se navegan desde el menú, no con puertas
+   2. LAS SALAS
+   ────────────────────────────────────────────────────────────
+   autoCentrar: centra el GLB en X/Z y apoya su punto más bajo
+     en y=0. Falla cuando el modelo trae terreno, cimientos o
+     una cubierta que el bounding box toma como "fondo".
+
+   seguirPiso: false fija tu altura en entrada[1] + alturaOjos y
+     no lanza ningún rayo hacia abajo. Es lo correcto en salas
+     planas y la salida cuando el raycast se confunde de capa.
+     Con false, entrada[1] es la altura del suelo — si apareces
+     flotando o hundido, ajusta ese número y recarga.
    ════════════════════════════════════════════════════════════ */
 
 const SALAS = [
@@ -194,28 +210,36 @@ const SALAS = [
     titulo: 'Invernadero',
     glb: './assets/grenhouse.glb',
     escala: 1,
-    entrada: [0, 0, 4], mirando: 180,
+    autoCentrar: true,
+    seguirPiso: true,
+    entrada: [0, 2, 4], mirando: 180,
     obras: [
-      { tipo: 'panel', titulo: 'Panel de ejemplo', autor: 'Colócalos con la tecla P',
-        anio: '2026', ficha: 'Panel autoportante · 100 × 140 cm',
-        texto: 'Entra con modoEditor activo, camina, mira hacia donde debe verse el panel y presiona P. Con J vuelcas todo a la consola.',
-        imagen: null, pos: [0, 1.55, -3], rotY: 0, alto: 1.4 },
+      { tipo: 'panel', titulo: 'Panel 1', autor: '', anio: '', ficha: '', texto: '', imagen: null,
+        pos: [-5.18, 4.55, 12.71], rotY: 94.8, alto: 2.4 },
+      { tipo: 'panel', titulo: 'Panel 2', autor: '', anio: '', ficha: '', texto: '', imagen: null,
+        pos: [0.88, 4.55, 16.25], rotY: -178.1, alto: 2.4 },
+      { tipo: 'panel', titulo: 'Panel 3', autor: '', anio: '', ficha: '', texto: '', imagen: null,
+        pos: [0.35, 4.55, -14.67], rotY: 2.4, alto: 2.4 },
     ],
   },
   {
     rotulo: 'Sala II',
-    titulo: 'Loft',
-    glb: './assets/lofta.glb',
+    titulo: 'Abandonado',
+    glb: './assets/office.glb',
     escala: 1,
-    entrada: [0, 0, 3], mirando: 180,
+    autoCentrar: true,
+    seguirPiso: true,
+    entrada: [0.01, 0.60, 0.25], mirando: 180,
     obras: [],
   },
   {
     rotulo: 'Sala III',
-    titulo: 'Galería',
-    glb: './assets/museo1.glb',
-    escala: 1,
-    entrada: [0, 0, 3], mirando: 180,
+    titulo: 'Restaurante',
+    glb: './assets/restaurante.glb',
+    escala: 0.01,
+    autoCentrar: true,
+    seguirPiso: false,          // altura fija: el raycast tomaba la cubierta
+    entrada: [0.39, -1, 0.10], mirando: -75,
     obras: [],
   },
   {
@@ -223,6 +247,8 @@ const SALAS = [
     titulo: 'Cuarta sala',
     glb: './assets/sala2.glb',
     escala: 1,
+    autoCentrar: true,
+    seguirPiso: true,
     entrada: [0, 0, 3], mirando: 180,
     obras: [],
   },
@@ -247,7 +273,7 @@ render.shadowMap.type = THREE.PCFSoftShadowMap;
 document.body.appendChild(render.domElement);
 
 const pmrem = new THREE.PMREMGenerator(render);
-escena.environment = pmrem.fromScene(new RoomEnvironment(), 0.06).texture;
+escena.environment = pmrem.fromScene(new RoomEnvironment(), 0.04).texture;
 
 if (CONFIG.exterior) {
   escena.background = new THREE.Color(0xa8c0cc);
@@ -472,7 +498,8 @@ async function entrarSala(indice, silencioso = false) {
   modelo.scale.setScalar(sala.escala || 1);
   modelo.traverse((o) => { if (o.isMesh) { o.castShadow = true; o.receiveShadow = true; } });
 
-  if (CONFIG.autoCentrar) {
+  const centrar = sala.autoCentrar ?? CONFIG.autoCentrar;
+  if (centrar) {
     const caja = new THREE.Box3().setFromObject(modelo);
     const centro = caja.getCenter(new THREE.Vector3());
     modelo.position.x -= centro.x;
@@ -482,6 +509,7 @@ async function entrarSala(indice, silencioso = false) {
 
   raizSala.add(modelo);
   escena.add(raizSala);
+  window.raizSala = raizSala;   // depuración
   registrarColisiones(modelo);
   (sala.obras || []).forEach(o => montarObra(o, raizSala));
 
@@ -493,7 +521,7 @@ async function entrarSala(indice, silencioso = false) {
   rotuloSala.textContent = `${sala.rotulo} — ${sala.titulo}`;
   colocados.obras.length = 0;      // el editor arranca limpio en cada sala
   actualizarMenu();
-  if (CONFIG.modoEditor) diagnosticar(modelo, sala);
+  if (CONFIG.modoEditor) diagnosticar(modelo, sala, centrar);
 
   if (!silencioso) {
     tBarra.style.width = '100%';
@@ -513,13 +541,12 @@ function precargarSiguiente() {
   const url = siguiente.glb;
   if (precargadas.has(url) || enVuelo.has(url)) return;
   cargarGLB(url).then((scene) => precargadas.set(url, scene)).catch(() => {});
-  // No guardamos más de una precarga a la vez.
   for (const [u, scene] of precargadas) {
     if (u !== url) { liberar(scene); precargadas.delete(u); }
   }
 }
 
-function diagnosticar(modelo, sala) {
+function diagnosticar(modelo, sala, centrado) {
   const caja = new THREE.Box3().setFromObject(modelo);
   const t = caja.getSize(new THREE.Vector3());
   let tris = 0; const nombres = [];
@@ -529,8 +556,10 @@ function diagnosticar(modelo, sala) {
     const g = o.geometry;
     tris += (g.index ? g.index.count : g.attributes.position.count) / 3;
   });
-  console.log(`%c${sala.rotulo} · ${t.x.toFixed(1)} × ${t.y.toFixed(1)} × ${t.z.toFixed(1)} m · ${Math.round(tris).toLocaleString()} tri · ${nombres.length} mallas`,
+  const sigue = sala.seguirPiso ?? CONFIG.seguirPiso;
+  console.log(`%c${sala.rotulo} · ${t.x.toFixed(1)} × ${t.y.toFixed(1)} × ${t.z.toFixed(1)} m · ${Math.round(tris).toLocaleString()} tri · ${nombres.length} mallas · ${centrado ? 'centrado' : 'sin centrar'} · ${sigue ? 'sigue piso' : 'altura fija'}`,
     'color:#6f9a3f;font-weight:bold');
+  console.log(`   y del modelo: de ${caja.min.y.toFixed(2)} a ${caja.max.y.toFixed(2)}`);
 }
 
 /* ════════════════════════════════════════════════════════════
@@ -592,9 +621,12 @@ const abajo = new THREE.Vector3(0, -1, 0);
 let alturaPiso = 0;
 
 function pasoLibre(dir, dist) {
+  if (!CONFIG.colisiones) return true;
   const alcance = dist + CONFIG.radioColision;
   for (const h of CONFIG.alturasColision) {
-    origen.copy(camara.position); origen.y = alturaPiso + h;
+    origen.copy(camara.position);
+    // Volando, los rayos salen de la cámara, no del piso.
+    origen.y = CONFIG.volar ? camara.position.y - 0.2 : alturaPiso + h;
     rayoCol.set(origen, dir);
     rayoCol.far = alcance;
     if (rayoCol.intersectObjects(colisionables, false).length) return false;
@@ -630,13 +662,26 @@ function mover(dt) {
     }
   }
 
-  if (CONFIG.seguirPiso) {
-    origen.copy(camara.position); origen.y += 2.2;
-    rayoPiso.set(origen, abajo); rayoPiso.far = 8;
+  // El seguimiento de piso se decide por sala.
+  const sigueSuelo = SALAS[indiceSala]?.seguirPiso ?? CONFIG.seguirPiso;
+
+  if (CONFIG.volar) {
+    // En vuelo la altura la manejas tú: nada de raycast.
+    const vv = CONFIG.velocidadVertical * dt;
+    if (teclas.has('Space')) camara.position.y += vv;
+    if (teclas.has('KeyC')) camara.position.y -= vv;
+  } else if (sigueSuelo) {
+    // El rayo sale de 30 cm sobre el piso conocido: así no puede
+    // tomar una mesa o un respaldo como si fueran suelo.
+    origen.copy(camara.position); origen.y = alturaPiso + 0.3;
+    rayoPiso.set(origen, abajo); rayoPiso.far = 2.5;
     const suelo = rayoPiso.intersectObjects(colisionables, false);
-    if (suelo.length) alturaPiso = suelo[0].point.y;
+    if (suelo.length && Math.abs(suelo[0].point.y - alturaPiso) < 0.6) {
+      alturaPiso = suelo[0].point.y;
+    }
     camara.position.y += (alturaPiso + CONFIG.alturaOjos - camara.position.y) * Math.min(1, dt * 12);
   } else {
+    // Altura fija: alturaPiso quedó en entrada[1] al cargar la sala.
     camara.position.y = alturaPiso + CONFIG.alturaOjos;
   }
 }
@@ -697,10 +742,12 @@ function posicionDelante(metros = 2) {
 function colocarPanel() {
   if (!raizSala) return;
   const { p, rotY } = posicionDelante(2);
+  // Volando, el panel va a la altura de la cámara; a pie, a 1.55 m sobre el piso.
+  const altura = CONFIG.volar ? +camara.position.y.toFixed(2) : +(alturaPiso + 1.55).toFixed(2);
   const obra = {
     tipo: 'panel', titulo: `Panel ${colocados.obras.length + 1}`, autor: 'Por definir',
     anio: '', ficha: '', texto: '', imagen: null,
-    pos: [+p.x.toFixed(2), 1.55, +p.z.toFixed(2)], rotY, alto: 1.4,
+    pos: [+p.x.toFixed(2), altura, +p.z.toFixed(2)], rotY, alto: 1.4,
   };
   montarObra(obra, raizSala);
   colocados.obras.push(obra);
@@ -716,15 +763,31 @@ function volcar() {
   navigator.clipboard?.writeText(texto).catch(() => {});
 }
 
+/* Tecla B: lista todas las superficies que hay debajo de ti, de arriba
+   hacia abajo. Sirve para saber en qué capa estás parado. */
+function sondearCapas() {
+  const o = camara.position.clone(); o.y += 30;
+  const r = new THREE.Raycaster(o, abajo);
+  r.far = 80;
+  const hits = r.intersectObjects(colisionables, false);
+  console.log('%cCapas debajo de ti (de arriba hacia abajo):', 'color:#6f9a3f;font-weight:bold');
+  if (!hits.length) console.log('  ninguna');
+  hits.forEach(h => console.log(`  y = ${h.point.y.toFixed(2)}   ${h.object.name || '(sin nombre)'}`));
+  console.log(`  tú estás en y = ${camara.position.y.toFixed(2)}`);
+}
+
 function actualizarHUD() {
   if (!CONFIG.modoEditor || !controles.isLocked || enTransicion) return;
   const { rotY } = posicionDelante(0);
+  const sigueSuelo = SALAS[indiceSala]?.seguirPiso ?? CONFIG.seguirPiso;
   hudEditor.innerHTML =
     `sala ${indiceSala}  ${SALAS[indiceSala]?.rotulo || ''}\n` +
     `x ${camara.position.x.toFixed(2)}  y ${camara.position.y.toFixed(2)}  z ${camara.position.z.toFixed(2)}\n` +
-    `rotY ${rotY}°   piso ${alturaPiso.toFixed(2)}\n` +
+    `rotY ${rotY}°   piso ${alturaPiso.toFixed(2)}   ${sigueSuelo ? 'sigue' : 'fijo'}\n` +
+    `entrada: [${camara.position.x.toFixed(2)}, ${alturaPiso.toFixed(2)}, ${camara.position.z.toFixed(2)}]\n` +
     `paneles ${colocados.obras.length}\n` +
-    `<b>P</b> panel  <b>J</b> volcar  <b>M</b> menú`;
+    `${CONFIG.volar ? '✈ vuelo' : '· a pie'}    ${CONFIG.colisiones ? '■ sólido' : '□ traspasa'}\n` +
+    `<b>P</b> panel  <b>J</b> volcar  <b>F</b> vuelo  <b>G</b> colisión  <b>B</b> capas`;
 }
 
 /* ════════════════════════════════════════════════════════════
@@ -738,6 +801,11 @@ addEventListener('keydown', (e) => {
   if (CONFIG.modoEditor && controles.isLocked && !enTransicion) {
     if (e.code === 'KeyP') colocarPanel();
     if (e.code === 'KeyJ') volcar();
+    if (e.code === 'KeyB') sondearCapas();
+    if (e.code === 'KeyF') CONFIG.volar = !CONFIG.volar;
+    if (e.code === 'KeyG') CONFIG.colisiones = !CONFIG.colisiones;
+    // Sin esto, el Espacio dispararía el botón del menú que quedó con el foco.
+    if (e.code === 'Space') e.preventDefault();
   }
 });
 addEventListener('keyup', (e) => teclas.delete(e.code));
@@ -749,6 +817,7 @@ controles.addEventListener('lock', () => {
 controles.addEventListener('unlock', () => {
   portada.style.display = 'flex';
   hudEditor.style.display = 'none';
+  teclas.clear();          // evita quedar caminando solo al volver del menú
   cerrarCedula();
   actualizarMenu();
 });
