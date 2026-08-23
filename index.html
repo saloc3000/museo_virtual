@@ -220,6 +220,9 @@ const CONFIG = {
 
   precargarSiguiente: true,
   esperaPrecarga: 8000,
+
+  volumenAmbiente: 0.5,      // 0–1
+  fadeAmbiente: 1.5,         // segundos de cruce entre pistas
 };
 
 /* ════════════════════════════════════════════════════════════
@@ -241,6 +244,7 @@ const SALAS = [
     rotulo: 'Sala I',
     titulo: 'Ensamble Biológico (Célula a Biosfera)',
     glb: './assets/grenhouse.glb',
+    audio: './audios/sala1/ambiente.wav',
     escala: 1,
     autoCentrar: true,
     seguirPiso: true,
@@ -261,26 +265,48 @@ const SALAS = [
     rotulo: 'Sala II',
     titulo: 'Fracturas y Huella Humana (Crisis Global)',
     glb: './assets/office.glb',
+    audio: './audios/sala2/ambiente.mp3',
     escala: 1,
     autoCentrar: true,
     seguirPiso: true,
     entrada: [0.01, 0.60, 0.25], mirando: 180,
-    obras: [],
+    obras: [
+    
+
+
+    ],
   },
   {
     rotulo: 'Sala III',
     titulo: 'El Espejo Emocional (Crueldad, Indolencia y Sensibilidad )',
     glb: './assets/restaurante.glb',
+    audio: './audios/sala3/ambiente.m4a',
     escala: 0.01,
     autoCentrar: true,
     seguirPiso: false,          // altura fija: el raycast tomaba la cubierta
     entrada: [0.39, -1, 0.10], mirando: -75,
-    obras: [],
+    obras: [
+    { tipo: 'panel', titulo: ' El DOMINIO VIOLENTO', autor: '¿Por qué durante siglos le llamamos "arte" y "valentía" a cazar animales que solo intentaban defender su vida?', ods: ['ODS 15 (Vida de ecosistemas terrestres)'], ficha: 'Antropocentrismo y desensibilización cultural', texto: 'Esta pintura muestra de forma muy cruda la violencia con la que los hombres atacan a los animales salvajes por pura diversión o ego. Este tipo de agresiones rompe la tranquilidad de la comunidad y del ecosistema, y va totalmente en contra del ODS 15 (Vida de ecosistemas terrestres). Si lo analizamos desde la psicología, la imagen deja ver un egoísmo gigante y cómo la gente se termina desensibilizando ante el dolor ajeno. Nos pone a pensar en lo urgente que es sentir empatía por otros seres.', imagen:'./imagenes/sala3/cazadores.jpeg',
+        pos: [-1.65, 0.8, 4.18], rotY: -176.7, alto: 0.7},
+        { tipo: 'panel', titulo: 'El plato invisible', autor: '¿Cuánta crueldad y sufrimiento silenciado estás dispuesto a ignorar en tu plato a cambio de unos minutos de placer gastronómico?', ods: ['ODS 12 (Producción y consumo responsables)','ODS 15 (Vida de ecosistemas terrestres)'], ficha: 'Disociación cognitiva y desensibilización sistemática', texto: 'Ver a estos animales encerrados muestra cómo el abandono afecta directamente la salud del organismo y refleja un problema grave en nuestra comunidad. Desde la psicología social, esta imagen evidencia la apatía y la desensibilización: nos hemos acostumbrado tanto a ver el dolor animal que preferimos mirar hacia otro lado para no sentirnos culpables. Al ignorar el sufrimiento de los más indefensos, apagamos nuestra propia empatía. Esta fotografía nos confronta y nos invita a dejar la indiferencia de lado para hacernos responsables del cuidado y la protección de los seres sintientes con los que convivimos', imagen: './imagenes/sala3/marrano.jpeg',
+        pos: [-0.24, 0.5, 0.03], rotY: -176.5, alto: 0.5 },
+
+        { tipo: 'panel', titulo: 'MIRADAS ENCERRADAS', autor: '¿Normalizar la crueldad hacia otras especies es el primer paso para perder nuestra propia humanidad?', ods: ['ODS 15 (Vida de ecosistemas terrestres) ','ODS 16 (Paz, justicia e instituciones sólidas)'],ficha: 'Apatía social y desensibilización', texto: 'Ver a estos animales encerrados muestra cómo el abandono afecta directamente la salud del organismo y refleja un problema grave en nuestra comunidad. Desde la psicología social, esta imagen evidencia la apatía y la desensibilización: nos hemos acostumbrado tanto a ver el dolor animal que preferimos mirar hacia otro lado para no sentirnos culpables. Al ignorar el sufrimiento de los más indefensos, apagamos nuestra propia empatía. Esta fotografía nos confronta y nos invita a dejar la indiferencia de lado para hacernos responsables del cuidado y la protección de los seres sintientes con los que convivimos', imagen: './imagenes/sala3/perros.jpeg',
+        pos: [-2.68, 0.55, -0.62], rotY: 87.9, alto: 0.8 },
+        // { tipo: 'panel', titulo: 'La infancia empaquetada', autor: '¿Realmente cree que un objeto o un regalo plástico es "barato" cuando el precio real lo está pagando la infancia robada de un niño al otro lado del mundo?', ods: [' ODS 8 (Trabajo decente y crecimiento económico)','ODS 10 (Reducción de las desigualdades)','ODS 12 (Producción y consumo responsables)'], ficha: ' Indefensión aprendida y sesgo de desconexión geográfica', texto: 'manos infantiles sometidas al trabajo industrial invisibilizado exponen las dinámicas de explotación detrás de la manufactura global. La psicología comunitaria advierte que la exposición prematura a entornos laborales abusivos genera indefensión aprendida y frena el desarrollo socioemocional de la niñez. El sesgo de desconexión geográfica permite a las sociedades de alto consumo disfrutar de productos económicos ignorando la vulneración de derechos humanos en la cadena de suministro. Esta obra interpela directamente al espectador en su rol de consumidor, demostrando cómo la búsqueda de gratificación barata e inmediata perpetúa la injusticia social y la apatía frente a la desigualdad global', imagen: './imagenes/sala3/niños.jpeg',
+        // pos: [-2.68, 0.55, -0.62], rotY: 87.9, alto: 1.4 },
+
+         { tipo: 'panel', titulo: 'La infancia empaquetada', autor: '¿Realmente cree que un objeto o un regalo plástico es "barato" cuando el precio real lo está pagando la infancia robada de un niño al otro lado del mundo?', ods: [' ODS 8 (Trabajo decente y crecimiento económico)','ODS 10 (Reducción de las desigualdades)','ODS 12 (Producción y consumo responsables)'], ficha: ' Indefensión aprendida y sesgo de desconexión geográfica', texto: 'manos infantiles sometidas al trabajo industrial invisibilizado exponen las dinámicas de explotación detrás de la manufactura global. La psicología comunitaria advierte que la exposición prematura a entornos laborales abusivos genera indefensión aprendida y frena el desarrollo socioemocional de la niñez. El sesgo de desconexión geográfica permite a las sociedades de alto consumo disfrutar de productos económicos ignorando la vulneración de derechos humanos en la cadena de suministro. Esta obra interpela directamente al espectador en su rol de consumidor, demostrando cómo la búsqueda de gratificación barata e inmediata perpetúa la injusticia social y la apatía frente a la desigualdad global', imagen: './imagenes/sala3/niños.jpeg',
+       pos: [1.7, 0.8, -2.71], rotY: -89.6, alto: 0.5 }
+
+
+    ],
   },
   {
     rotulo: 'Sala IV',
     titulo: 'Cuarta sala',
     glb: './assets/sala2.glb',
+    audio: './audios/sala4/ambiente.mp3',
     escala: 1,
     autoCentrar: true,
     seguirPiso: true,
@@ -296,6 +322,9 @@ const SALAS = [
 const escena = new THREE.Scene();
 const camara = new THREE.PerspectiveCamera(62, innerWidth / innerHeight, 0.05, 300);
 camara.rotation.order = 'YXZ';
+
+const oidoAmbiente = new THREE.AudioListener();
+camara.add(oidoAmbiente);
 
 const render = new THREE.WebGLRenderer({ antialias: true, powerPreference: 'high-performance' });
 render.setSize(innerWidth, innerHeight);
@@ -368,6 +397,77 @@ function liberar(raiz) {
     }
   });
   raiz.removeFromParent();
+}
+
+/* ════════════════════════════════════════════════════════════
+   4B. AUDIO AMBIENTAL POR SALA (cruce entre pistas)
+   ────────────────────────────────────────────────────────────
+   Dos THREE.Audio en ping-pong: al cambiar de sala, la pista
+   entrante sube de volumen mientras la saliente baja, y luego
+   se detiene. El audio requiere un gesto del usuario para sonar
+   (ver seleccionarSala), así que cargar/"play" antes de eso es
+   inofensivo: queda esperando a que el AudioContext arranque.
+   ════════════════════════════════════════════════════════════ */
+
+const cargadorAudio = new THREE.AudioLoader();
+const buffersAudio = new Map();
+const ambienteA = new THREE.Audio(oidoAmbiente);
+const ambienteB = new THREE.Audio(oidoAmbiente);
+let ambienteActivoEsA = true;
+let urlAmbienteActual = null;
+
+function cargarBufferAudio(url) {
+  if (buffersAudio.has(url)) return Promise.resolve(buffersAudio.get(url));
+  return new Promise((resolve, reject) => {
+    cargadorAudio.load(url, (buffer) => { buffersAudio.set(url, buffer); resolve(buffer); }, undefined, reject);
+  });
+}
+
+async function cambiarAmbiente(url) {
+  if (url === urlAmbienteActual) return;
+  urlAmbienteActual = url;
+
+  const saliente = ambienteActivoEsA ? ambienteA : ambienteB;
+  const volumenSaliente0 = saliente.isPlaying ? saliente.getVolume() : 0;
+
+  if (!url) {
+    // Sala sin ambiente definido: solo apaga la pista actual.
+    if (saliente.isPlaying) desvanecer(saliente, volumenSaliente0, 0, () => saliente.stop());
+    return;
+  }
+
+  let buffer;
+  try {
+    buffer = await cargarBufferAudio(url);
+  } catch (err) {
+    console.error(`No se pudo cargar el audio ambiental ${url}`, err);
+    return;
+  }
+  if (url !== urlAmbienteActual) return;   // cambiaste de sala mientras cargaba
+
+  const entrante = ambienteActivoEsA ? ambienteB : ambienteA;
+  ambienteActivoEsA = !ambienteActivoEsA;
+
+  if (entrante.isPlaying) entrante.stop();
+  entrante.setBuffer(buffer);
+  entrante.setLoop(true);
+  entrante.setVolume(0);
+  entrante.play();
+
+  desvanecer(entrante, 0, CONFIG.volumenAmbiente);
+  if (saliente.isPlaying) desvanecer(saliente, volumenSaliente0, 0, () => saliente.stop());
+}
+
+/* Rampa lineal de volumen en `duracion` segundos (CONFIG.fadeAmbiente). */
+function desvanecer(sonido, desde, hasta, alTerminar) {
+  const duracion = CONFIG.fadeAmbiente * 1000;
+  const t0 = performance.now();
+  (function paso() {
+    const t = Math.min(1, (performance.now() - t0) / duracion);
+    sonido.setVolume(desde + (hasta - desde) * t);
+    if (t < 1) requestAnimationFrame(paso);
+    else if (alTerminar) alTerminar();
+  })();
 }
 
 /* ════════════════════════════════════════════════════════════
@@ -499,6 +599,7 @@ async function entrarSala(indice, silencioso = false) {
   enTransicion = true;
   clearTimeout(temporizadorPrecarga);
   cerrarCedula();
+  cambiarAmbiente(sala.audio || null);
 
   if (!silencioso) {
     tRotulo.textContent = sala.rotulo;
@@ -629,6 +730,8 @@ function actualizarMenu() {
    dentro del click; la carga viene después, con el puntero ya bloqueado. */
 function seleccionarSala(i) {
   if (enTransicion) return;
+  // El AudioContext arranca "suspended" hasta un gesto del usuario: este clic lo es.
+  if (oidoAmbiente.context.state !== 'running') oidoAmbiente.context.resume();
   controles.lock();
   if (i !== indiceSala) entrarSala(i);
 }
