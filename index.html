@@ -131,6 +131,33 @@
     padding: 12px 14px; color: #b8c4ba; white-space: pre;
   }
   #editor b { color: var(--acento); font-weight: 600; }
+
+  .sala-btn.referencias-btn { margin-top: 10px; border-top: 1px solid #26302a; opacity: .85; }
+  .sala-btn.referencias-btn:hover { opacity: 1; }
+  .sala-btn.referencias-btn .num { visibility: hidden; }
+
+  #panelReferencias {
+    position: fixed; inset: 0; z-index: 40; display: none;
+    background: rgba(6,9,7,.96); backdrop-filter: blur(10px);
+    padding: 60px 32px; overflow-y: auto;
+  }
+  #panelReferencias.visible { display: block; }
+  #panelReferencias h2 { font-family: var(--serif); font-weight: 400; font-size: 30px; margin: 0 auto 28px; max-width: 640px; }
+  #panelReferencias h3 {
+    font-size: 11px; letter-spacing: .2em; text-transform: uppercase; color: var(--acento);
+    margin: 28px auto 10px; max-width: 640px; padding-top: 18px; border-top: 1px solid #26302a;
+  }
+  #panelReferencias h3:first-of-type { border-top: 0; padding-top: 0; }
+  #panelReferencias ol { margin: 0 auto; max-width: 640px; padding-left: 20px; }
+  #panelReferencias li { font-size: 13px; line-height: 1.6; color: #ccd5cc; margin-bottom: 10px; }
+  #panelReferencias a { color: var(--acento); word-break: break-word; }
+  #panelReferencias a:hover { text-decoration: none; }
+  #cerrarReferencias {
+    position: fixed; top: 20px; right: 24px; background: none; border: 0; cursor: pointer;
+    color: var(--cal); font-size: 24px;
+  }
+  #cerrarReferencias:hover { color: var(--papel); }
+
   @media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
 </style>
 </head>
@@ -146,6 +173,12 @@
   <div class="teclas">
     <kbd>W A S D — caminar</kbd><kbd>E — leer</kbd><kbd>M o Esc — menú</kbd>
   </div>
+</div>
+
+<div id="panelReferencias">
+  <button id="cerrarReferencias" aria-label="Cerrar referencias">×</button>
+  <h2>Referencias</h2>
+  <div id="listaReferencias"></div>
 </div>
 
 <div id="transicion">
@@ -276,13 +309,13 @@ const SALAS = [
       { pos: [-2, 22.83, 13.62], size: [30, 20, 2] },
     ],
     obras: [
-       { tipo: 'panel', titulo: 'EL PESO DE EL DESECHO', autor: '¿Compramos cosas que no necesitamos con recursos que no recuperaremos, es el consumo desmedido la mayor adicción de nuestro siglo?', ods: [''], ficha: '', texto: '', imagen: './imagenes/sala2/basura.jpeg',
+       { tipo: 'panel', titulo: 'EL PESO DE EL DESECHO', autor: '¿Compramos cosas que no necesitamos con recursos que no recuperaremos, es el consumo desmedido la mayor adicción de nuestro siglo?', ods: [''], ficha: '', texto: 'Esta foto muestra de forma muy clara el impacto del plástico en el planeta y la cantidad de basura que generamos día a día. La acumulación de plásticos rompe el equilibrio de la comunidad y el ecosistema, relacionándose directamente con el ODS 12 (Producción y consumo responsables). Desde la psicología, la imagen refleja el antropocentrismo y la disonancia cognitiva: sabemos perfectamente el daño que causa el consumo desmedido, pero por indolencia preferimos no cambiarnuestros hábitos. Ver esta realidad nos obliga a dejar las excusas y a cambiar la forma en que consumimos.', imagen: './imagenes/sala2/basura.jpeg',
         pos: [-2.44, 15.68, -10.59], rotY: 4.8, alto: 2.4 },
       { tipo: 'panel', titulo: 'CIELO DE HUMO', autor: '¿Hasta cuándo vamos a llamar "desarrollo" a algo que nos está dejando sin aire limpio para vivir?', ods: [''], ficha: '', texto: 'Esta foto muestra la gran cantidad de humo que las fábricas tiran al aire todos los días. Esto arruina la calidad del aire que respiramos y termina afectando a toda la comunidad y al ecosistema. El tema se relaciona directamente con el ODS 13 (Acción por el clima). Si lo vemos desde la psicología, la imagen muestra la negación y el antropocentrismo: como sociedad preferimos seguir produciendo dinero antes que cuidar la salud del planeta. Nos hace pensar en lo fácil que nos acostumbramos a ver la contaminación como algo normal.', imagen:  './imagenes/sala2/fabrica.jpeg',
         pos: [-2.3, 15.68, 9.64], rotY: -177.9, alto: 2.4 },
       { tipo: 'panel', titulo: 'El monstruo sintético', autor: '¿En qué momento tu comodidad de usar un plástico por cinco minutos se convirtió en una condena eterna para los océanos del planeta?', ods: ['ODS 14 (Vida submarina)','ODS 12 (Producción y consumo responsables)','ODS 6 (Agua limpia y saneamiento)'], ficha: 'Ceguera conductual y difusión de la responsabilidad.', texto: 'Una bolsa plástica flotando bajo el agua simulando la forma de una medusa visibiliza la contaminación sintética que asfixia los ecosistemas marinos. La psicología ambiental analiza este fenómeno mediante la ceguera conductual y la difusión de la responsabilidad: desvinculamos nuestras acciones cotidianas del impacto lejano en la vida acuática. Al normalizar los plásticos de un solo uso, incurrimos en una desconexión perceptiva que invisibiliza el sufrimiento de la fauna marina. Esta fotografía confronta la indiferencia del espectador, demostrando cómo la comodidad individual altera la biosfera e invalida la ética de cuidado requerida para proteger la biodiversidad marina.', imagen:  './imagenes/sala2/medusa.jpeg',
         pos: [2.8, 15.7, 0.92], rotY: -91.9, alto: 2.4 },
-      { tipo: 'panel', titulo: 'La vestidura del exceso', autor: '¿Es el consumo acelerado de cosas descartables el anestésico que inventamos para no enfrentar la vaciedad de nuestro estilo de vida?', anio: ['ODS 12 (Producción y consumo responsables)','ODS 15 (Vida de ecosistemas terrestres)'], ficha: 'Disonancia cognitiva y gratificación instantánea.', texto: 'Las toneladas de ropa sintética desechadas en ecosistemas secos exponen las consecuencias del hiperconsumismo y el antropocentrismo sobre la biosfera. Desde la psicología cognitiva, la compra compulsiva actúa como un mecanismo de gratificación instantánea para compensar vacíos emocionales. Incurrimos colectivamente en disonancia cognitiva al declarar preocupación ambiental mientras perpetuamos hábitos de diseño acelerado. Esta imagen confronta la ilusión del deseo "remoto", mostrando cómo la moda desechable altera los ciclos biogeoquímicos del suelo y anestesia la responsabilidad ética, demostrando que la adicción al consumo rápido fractura tanto el equilibrio de los ecosistemas como la capacidad humana de empatizar con las futuras generaciones.', imagen:  './imagenes/sala2/ropa.jpeg',
+      { tipo: 'panel', titulo: 'La vestidura del exceso', autor: '¿Es el consumo acelerado de cosas descartables el anestésico que inventamos para no enfrentar la vaciedad de nuestro estilo de vida?', ods: ['ODS 12 (Producción y consumo responsables)','ODS 15 (Vida de ecosistemas terrestres)'], ficha: 'Disonancia cognitiva y gratificación instantánea.', texto: 'Las toneladas de ropa sintética desechadas en ecosistemas secos exponen las consecuencias del hiperconsumismo y el antropocentrismo sobre la biosfera. Desde la psicología cognitiva, la compra compulsiva actúa como un mecanismo de gratificación instantánea para compensar vacíos emocionales. Incurrimos colectivamente en disonancia cognitiva al declarar preocupación ambiental mientras perpetuamos hábitos de diseño acelerado. Esta imagen confronta la ilusión del deseo "remoto", mostrando cómo la moda desechable altera los ciclos biogeoquímicos del suelo y anestesia la responsabilidad ética, demostrando que la adicción al consumo rápido fractura tanto el equilibrio de los ecosistemas como la capacidad humana de empatizar con las futuras generaciones.', imagen:  './imagenes/sala2/ropa.jpeg',
         pos: [-9.27, 15.68, -3.19], rotY: 89.3, alto: 2.4 },
 
 
@@ -760,12 +793,61 @@ SALAS.forEach((sala, i) => {
   botones.push(b);
 });
 
+const btnReferencias = document.createElement('button');
+btnReferencias.id = 'btnReferencias';
+btnReferencias.className = 'sala-btn referencias-btn';
+btnReferencias.innerHTML =
+  `<span class="num">·</span>` +
+  `<span class="txt"><b>Museo</b><i>Referencias</i></span>` +
+  `<span class="estado"></span>`;
+menuSalas.appendChild(btnReferencias);
+
 function actualizarMenu() {
   botones.forEach((b, i) => {
     b.classList.toggle('actual', i === indiceSala);
     b.querySelector('.estado').textContent = i === indiceSala ? 'Actual' : '';
   });
 }
+
+/* ---------- Referencias (APA) ---------- */
+
+const REFERENCIAS = [
+  { sala: 'Sala I — Ensamble Biológico', items: [
+    { texto: 'Dreamstime. (s. f.). Una gota de agua descansa sobre una hoja verde vibrante. Recuperado de Dreamstime.', url: 'https://es.dreamstime.com/una-gota-de-agua-descansa-sobre-hoja-verde-vibrante-la-imagen-muestra-vista-m%C3%A1s-cercana-es-transparente-y-parece-reflejar-el-image393945275' },
+    { texto: 'StockCake. (s. f.). Primer plano detallado de un ojo. Recuperado de StockCake.', url: 'https://stockcake.com/es/i/primer-plano-detallado-de-un-ojo_1123989_363271' },
+    { texto: 'Schuster, S. (2026). Tronco de árbol roído por dientes de castor en el bosque [Fotografía]. Unsplash.', url: 'https://unsplash.com/es/fotos/tronco-de-arbol-roido-por-dientes-de-castor-en-el-bosque-7ODP7s6OOLI' },
+    { texto: 'Thompson, R. (2024). Macro through the winter. Robert Thompson Photography.', url: 'https://blog.robertthompsonphotography.com/2024/01/23/macro-through-the-winter/' },
+  ]},
+  { sala: 'Sala II — Fracturas y Huella Humana', items: [
+    { texto: 'Dreamstime. (s. f.). Plástico formando la figura de una medusa flotando bajo el agua, representando la contaminación oceánica [Fotografía]. Dreamstime.', url: 'https://www.dreamstime.com/plastic-waste-forming-jellyfish-shape-floating-underwater-depicting-ocean-pollution-plastic-bags-other-plastic-garbage-image353371156' },
+    { texto: 'Fast-fashion_deaths. (2022, 8 de enero). Where unsold fast fashion articles go to die [Fotografía]. Reddit.', url: 'https://www.reddit.com/r/Anticonsumption/comments/ryqqhi/where_unsold_fast_fashion_articles_go_to_die/' },
+    { texto: 'Unsplash. (s. f.-a). Fábricas con humo bajo el cielo nublado [Fotografía]. Unsplash.', url: 'https://unsplash.com/es/fotos/fabricas-con-humo-bajo-el-cielo-nublado-6xeDIZgoPaw' },
+    { texto: 'Unsplash. (s. f.-b). Niño recogiendo plástico en un vertedero [Fotografía]. Unsplash.', url: 'https://unsplash.com/es/fotos/nino-recogiendo-plastico-en-un-vertedero-R1_ibA4oXiI' },
+  ]},
+  { sala: 'Sala III — El Espejo Emocional', items: [
+    { texto: 'GenV. (s. f.). Agricultura animal. GenV.', url: 'https://genv.org/es/agricultura-animal/' },
+    { texto: 'Noticias Obreras. (2025, 27 de octubre). Erradicar el trabajo infantil: una cuestión de justicia fiscal y derechos humanos. Noticias Obreras.', url: 'https://noticiasobreras.es/2025/10/erradicar-el-trabajo-infantil-justicia-fiscal/' },
+    { texto: 'Unsplash. (s. f.-a). Escena caótica de caza con hombres, caballos, leones y jabalíes [Fotografía]. Unsplash.', url: 'https://unsplash.com/es/fotos/escena-caotica-de-caza-con-hombres-caballos-leones-y-jabalies-z74t3ppCQvI' },
+    { texto: 'Unsplash. (s. f.-b). Un grupo de perros sentados dentro de jaulas [Fotografía]. Unsplash.', url: 'https://unsplash.com/es/fotos/un-grupo-de-perros-sentados-dentro-de-jaulas-HK5LQ8CE56k' },
+  ]},
+  { sala: 'Sala IV — Territorios de Esperanza', items: [
+    { texto: 'Forbes Staff. (2022, 22 de noviembre). WWF: 7 de cada 10 personas apoyan la lucha contra contaminación plástica. Forbes México.', url: 'https://forbes.com.mx/wwf-7-de-cada-10-personas-apoyan-la-lucha-contra-contaminacion-plastica/' },
+    { texto: 'Redacción El País. (2025, 26 de julio). Cali vivió sus 489 años limpiando sus siete ríos: imágenes de cómo se vivió la jornada.', url: 'https://www.elpais.com.co/cali/cali-celebro-sus-489-anos-limpiando-sus-siete-rios-imagenes-de-como-se-vivio-la-jornada-0503.html' },
+    { texto: 'Red de Árboles. (s. f.). Siembra de árboles para empresas en Colombia.', url: 'https://www.reddearboles.org/empresas' },
+    { texto: 'Pinzón Bejarano, J. D. (2026, 15 de febrero). Bogotá cultiva vida con las huertas urbanas que transforman la ciudad. Canal Capital.', url: 'https://www.canalcapital.gov.co/actualidad/bogota-y-sus-huertas-urbanas/' },
+  ]},
+];
+
+const panelReferencias = document.getElementById('panelReferencias');
+const listaReferencias = document.getElementById('listaReferencias');
+
+listaReferencias.innerHTML = REFERENCIAS.map(grupo => `
+  <h3>${grupo.sala}</h3>
+  <ol>${grupo.items.map(r => `<li>${r.texto}${r.url ? ` <a href="${r.url}" target="_blank" rel="noopener">${r.url}</a>` : ''}</li>`).join('')}</ol>
+`).join('');
+
+document.getElementById('btnReferencias').addEventListener('click', () => panelReferencias.classList.add('visible'));
+document.getElementById('cerrarReferencias').addEventListener('click', () => panelReferencias.classList.remove('visible'));
 
 /* El bloqueo del puntero necesita un gesto del usuario, así que se pide
    dentro del click; la carga viene después, con el puntero ya bloqueado. */
