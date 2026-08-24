@@ -71,6 +71,15 @@
     text-shadow: 0 1px 6px rgba(0,0,0,.85);
   }
   #pista.visible { opacity: 1; }
+  #instrucciones {
+    position: fixed; left: 50%; top: 50%; transform: translate(-50%, -50%);
+    z-index: 12; pointer-events: none; text-align: center; white-space: nowrap;
+    font-family: var(--serif); font-size: clamp(20px, 3.6vw, 32px); font-weight: 400;
+    color: var(--papel); text-shadow: 0 2px 16px rgba(0,0,0,.9);
+    opacity: 0; transition: opacity .6s ease;
+  }
+  #instrucciones.visible { opacity: 1; }
+  #instrucciones b { color: var(--acento); font-weight: 600; }
 #cedula {
   position: fixed; right: 28px; top: 50%; transform: translate(24px, -50%);
   width: min(340px, calc(100vw - 56px)); z-index: 20;
@@ -84,20 +93,20 @@
   box-sizing: border-box;    /* Asegura que el padding no rompa el cálculo de la altura */
 }
   #cedula.visible { opacity: 1; transform: translate(0, -50%); pointer-events: auto; }
-  #cedula h2 { font-family: var(--serif); font-weight: 400; font-size: 25px; line-height: 1.25; margin: 0 0 4px; }
-  #cedula .autor { font-size: 11px; letter-spacing: .18em; color: var(--acento); margin: 0 0 10px; }
-  
+  #cedula h2, #visorObra h2 { font-family: var(--serif); font-weight: 400; font-size: 25px; line-height: 1.25; margin: 0 0 4px; }
+  #cedula .autor, #visorObra .autor { font-size: 11px; letter-spacing: .18em; color: var(--acento); margin: 0 0 10px; }
+
   /* --- REEMPLAZO Y NUEVOS ESTILOS PARA LOS TAGS --- */
-  #cedula .ods { 
-    display: flex; 
-    flex-wrap: wrap; 
-    gap: 6px; 
-    margin: 0 0 16px; 
+  #cedula .ods, #visorObra .ods {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin: 0 0 16px;
   }
-  #cedula .ods:empty { display: none; }
+  #cedula .ods:empty, #visorObra .ods:empty { display: none; }
 
   /* Estilo visual de cada tag individual */
-  #cedula .ods .tag {
+  #cedula .ods .tag, #visorObra .ods .tag {
     font-size: 11px;
     font-weight: 600;
     letter-spacing: .05em;
@@ -111,8 +120,8 @@
   }
 
   #cedula hr { border: 0; border-top: 1px solid #26302a; margin: 0 0 16px; }
-  #cedula .ficha { font-size: 12px; color: var(--cal); margin: 0 0 14px; }
-  #cedula .texto { font-size: 14px; line-height: 1.65; color: #ccd5cc; margin: 0; }
+  #cedula .ficha, #visorObra .ficha { font-size: 12px; color: var(--cal); margin: 0 0 14px; }
+  #cedula .texto, #visorObra .texto { font-size: 14px; line-height: 1.65; color: #ccd5cc; margin: 0; }
   #cerrar { position: absolute; top: 14px; right: 14px; background: none; border: 0; cursor: pointer; color: var(--cal); font-size: 20px; }
   #cerrar:hover { color: var(--papel); }
 
@@ -132,6 +141,11 @@
   }
   #editor b { color: var(--acento); font-weight: 600; }
 
+  .grupo4 {
+    max-width: min(420px, 90vw); width: 100%; height: auto; display: block;
+    margin: 4px auto 0; border-radius: 4px; box-shadow: 0 8px 30px rgba(0,0,0,.5);
+  }
+
   .sala-btn.referencias-btn { margin-top: 10px; border-top: 1px solid #26302a; opacity: .85; }
   .sala-btn.referencias-btn:hover { opacity: 1; }
   .sala-btn.referencias-btn .num { visibility: hidden; }
@@ -142,7 +156,8 @@
     padding: 60px 32px; overflow-y: auto;
   }
   #panelReferencias.visible { display: block; }
-  #panelReferencias h2 { font-family: var(--serif); font-weight: 400; font-size: 30px; margin: 0 auto 28px; max-width: 640px; }
+  #panelReferencias h2 { font-family: var(--serif); font-weight: 400; font-size: 30px; margin: 0 auto 4px; max-width: 640px; }
+  .aviso-referencias { font-size: 12px; color: var(--cal); margin: 0 auto 28px; max-width: 640px; }
   #panelReferencias h3 {
     font-size: 11px; letter-spacing: .2em; text-transform: uppercase; color: var(--acento);
     margin: 28px auto 10px; max-width: 640px; padding-top: 18px; border-top: 1px solid #26302a;
@@ -158,6 +173,42 @@
   }
   #cerrarReferencias:hover { color: var(--papel); }
 
+  .ref-item {
+    cursor: pointer; transition: background .15s;
+    display: flex; align-items: center; gap: 16px;
+    padding: 8px 10px; border-radius: 4px; border-left: 2px solid var(--acento);
+  }
+  .ref-item:hover { background: rgba(111,154,63,.12); }
+  .ref-item .ref-texto { flex: 1 1 auto; }
+  .ref-item .ver-obra {
+    flex-shrink: 0; display: inline-block; padding: 7px 16px;
+    border: 1px solid var(--acento); border-radius: 20px;
+    font-size: 11px; font-weight: 600; letter-spacing: .08em; text-transform: uppercase;
+    color: var(--acento); white-space: nowrap; transition: background .15s, color .15s;
+  }
+  .ref-item:hover .ver-obra { background: var(--acento); color: #0a0e0b; }
+
+  #visorObra {
+    position: fixed; inset: 0; z-index: 50; display: none;
+    background: rgba(6,9,7,.97); backdrop-filter: blur(10px);
+    padding: 60px 32px; overflow-y: auto;
+  }
+  #visorObra.visible { display: block; }
+  .visor-contenido {
+    display: flex; gap: 40px; max-width: 1000px; margin: 0 auto; align-items: flex-start;
+    flex-wrap: wrap;
+  }
+  #vo-imagen {
+    flex: 1 1 380px; max-width: 480px; width: 100%; height: auto;
+    border: 1px solid #26302a; object-fit: contain; background: #0a0e0b;
+  }
+  .visor-texto { flex: 1 1 320px; min-width: 280px; }
+  #cerrarVisor {
+    position: fixed; top: 20px; right: 24px; background: none; border: 0; cursor: pointer;
+    color: var(--cal); font-size: 24px;
+  }
+  #cerrarVisor:hover { color: var(--papel); }
+
   @media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
 </style>
 </head>
@@ -166,6 +217,7 @@
 <div id="portada">
   <div>
     <h1>Museo Virtual</h1>
+    <img src="./imagenes/grupo4.jpeg" alt="Grupo 4" class="grupo4">
     <p class="bajada">Elige una sala para entrar. Dentro, acércate a un panel y míralo para leer su cédula.</p>
   </div>
   <div id="menuSalas"></div>
@@ -178,7 +230,22 @@
 <div id="panelReferencias">
   <button id="cerrarReferencias" aria-label="Cerrar referencias">×</button>
   <h2>Referencias</h2>
+  <p class="aviso-referencias">Haz clic en una referencia para ver la obra y el texto completo.</p>
   <div id="listaReferencias"></div>
+</div>
+
+<div id="visorObra">
+  <button id="cerrarVisor" aria-label="Cerrar obra">×</button>
+  <div class="visor-contenido">
+    <img id="vo-imagen" alt="">
+    <div class="visor-texto">
+      <h2 id="vo-titulo"></h2>
+      <p class="autor" id="vo-autor"></p>
+      <p class="ods" id="vo-ods"></p>
+      <h3 class="ficha" id="vo-ficha"></h3>
+      <p class="texto" id="vo-texto"></p>
+    </div>
+  </div>
 </div>
 
 <div id="transicion">
@@ -191,8 +258,9 @@
 
 <div id="reticula"></div>
 <div id="pista"></div>
+<div id="instrucciones">Mueve el <b>mouse</b> para mirar alrededor<br>Usa <b>W A S D</b> o las flechas para caminar</div>
 <div id="rotuloSala"></div>
-<div id="ayuda">W A S D · Shift correr · F vuelo · G colisión · M menú</div>
+<div id="ayuda">W A S D · Shift correr · M menú</div>
 <div id="editor"></div>
 
 <div id="cedula">
@@ -233,7 +301,7 @@ import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js';
    ════════════════════════════════════════════════════════════ */
 
 const CONFIG = {
-  modoEditor: true,          // HUD + teclas P, J, F, G, B
+  modoEditor: false,         // HUD + teclas P, J, F, G, B — apagado; poner en true para reactivarlo
   exterior: true,            // luz de cielo; false para salas cerradas
   luzSobreObras: true,
   autoCentrar: true,
@@ -285,11 +353,11 @@ const SALAS = [
     obras: [
       { tipo: 'panel', titulo: 'El espejo celular', autor: '¿Si la textura de tu mirada lleva grabada la misma geometría fractal de las barreras de coral y los cráteres de la Tierra, a quién destruyes realmente cuando contaminas la biosfera?', ods: ['ODS 15 (Vida de ecosistemas terrestres)',' ODS 14 (Vida submarina)','ODS 3 (Salud y bienestar)'], ficha: 'Identidad ecológica', texto: ' Al examinar en detalle el iris humano, la ilusión de separación entre la psique y la naturaleza se disuelve. La ecopsicología y los niveles de organización biológica demuestran que las mismas leyes fractales que estructuran los órganos humanos rigen los ecosistemas marinos y terrestres. La psicología cognitiva advierte que el antropocentrismo actúa como un sesgo de desconexión perceptiva: pretendemos proteger la salud mental ignorando que nuestra propia biología es un reflejo microscópico del planeta. Reconocer que la mirada es biológicamente un ecosistema constituye el primer paso para transitar de la indiferencia hacia una verdadera identidad ecológica interconectada.', imagen: './imagenes/sala1/ojo.jpeg',
         pos: [-5.18, 4.55, 12.71], rotY: 94.8, alto: 2.4 },
-      { tipo: 'panel', titulo: 'Microconectividad', autor: 'Por qué asumimos que nuestra inteligencia es superior cuando una simple gota sobre una hoja organiza el intercambio de energía que sostiene el aire que respira?', ods: ['ODS 6 (Agua limpia y saneamiento)','ODS 15 (Vida de ecosistemas terrestres)','ODS 13 (Acción por el clima)'], ficha: 'interdependencia sistémica y ecopsicología', texto: 'Desde la perspectiva de la ecopsicología y los niveles de organización biológica, la interacción entre el agua y la membrana celular vegetal demuestra la arquitectura interconectada de la vida. La psicología cognitiva tradicional suele fragmentar el estudio de la mente, ignorando que la capacidad adaptativa humana comparte principios de autorregulación con los sistemas biológicos elementales. Esta fotografía cuestiona el egoísmo cognitivo. Entender cómo se relacionan la materia orgánica y el agua nos obliga a reconfigurar la noción de individuo hacia un modelo de interdependencia, donde la salud del cerebro humano es inseparable de la integridad ecológica microscópica.', imagen: './imagenes/sala1/hoja.jpeg',
+      { tipo: 'panel', titulo: 'Microconectividad', autor: '¿Por qué asumimos que nuestra inteligencia es superior cuando una simple gota sobre una hoja organiza el intercambio de energía que sostiene el aire que respira?', ods: ['ODS 6 (Agua limpia y saneamiento)','ODS 15 (Vida de ecosistemas terrestres)','ODS 13 (Acción por el clima)'], ficha: 'interdependencia sistémica y ecopsicología', texto: 'Desde la perspectiva de la ecopsicología y los niveles de organización biológica, la interacción entre el agua y la membrana celular vegetal demuestra la arquitectura interconectada de la vida. La psicología cognitiva tradicional suele fragmentar el estudio de la mente, ignorando que la capacidad adaptativa humana comparte principios de autorregulación con los sistemas biológicos elementales. Esta fotografía cuestiona el egoísmo cognitivo. Entender cómo se relacionan la materia orgánica y el agua nos obliga a reconfigurar la noción de individuo hacia un modelo de interdependencia, donde la salud del cerebro humano es inseparable de la integridad ecológica microscópica.', imagen: './imagenes/sala1/hoja.jpeg',
         pos: [0.88, 4.55, 16.25], rotY: -178.1, alto: 2.4 },
       { tipo: 'panel', titulo: 'El internet de la tierra', autor: '¿Por qué nos creemos la especie más avanzada si bajo el suelo una red de micelio sostiene la nutrición de todo un bosque sin agotar un solo recurso?', ods: ['ODS 15 (Vida de ecosistemas terrestres)','ODS 13 (Acción por el clima)','ODS 3 (Salud y bienestar)'], ficha: 'Inteligencia colectiva e interdependencia sistémica.', texto: 'La red de micelios demuestra la arquitectura interconectada e inteligente de los sistemas vivos. Desde la ecopsicología y los niveles de organización biológica, esta red de filamentos no representa materia en análisis, sino un sistema de comunicación y transporte de nutrientes entre especies. La psicología cognitiva tradicional suele aislar el estudio de la mente, ignorando que los procesos de adaptación humanos comparten principios con las redes biológicas elementales. Reconocer la complejidad del suelo cuestiona el egocentrismo humano e invita a reconfigurar la noción del "yo" hacia un modelo de interdependencia, donde la salud cerebral es inseparable del equilibrio microbiano terrestre.', imagen: './imagenes/sala1/wifi.jpeg',
         pos: [0.35, 4.55, -14.67], rotY: 2.4, alto: 2.4 }, 
-        { tipo: 'panel', titulo: 'LLAMANDO REFLEXIVO', autor: '¿Por qué cuando un animal transforma el bosque decimos que es supervivencia, pero cuando el ser humano lo devasta lo llamamos "progreso"?', ods: ['ODS 15 (Vida de ecosistemas terrestres)'], ficha: '', texto: 'La marca de los dientes en este tronco demuestra cómo el castor altera el tejido vegetal de un organismo para transformar por completo su comunidad y ecosistema. A diferencia del impacto humano, esta modificación favorece la biodiversidad, algo central en el ODS 15 (Vida de ecosistemas terrestres). Al mirar esta imagen desde la psicología, enfrentamos nuestra propia disonancia cognitiva: nos cuesta asumir que las decisiones diarias dañan el entorno. Entender el papel de cadaespecie en la naturaleza es el primer paso para dejar la apatía de lado y empezar a actuar con verdadera empatía ambiental.', imagen: './imagenes/sala1/arboles.jpeg',
+        { tipo: 'panel', titulo: 'Esculpido por la necesidad, destruido por la apatía', autor: '¿Por qué cuando un animal transforma el bosque decimos que es supervivencia, pero cuando el ser humano lo devasta lo llamamos "progreso"?', ods: ['ODS 15 (Vida de ecosistemas terrestres)'], ficha: '', texto: 'La marca de los dientes en este tronco demuestra cómo el castor altera el tejido vegetal de un organismo para transformar por completo su comunidad y ecosistema. A diferencia del impacto humano, esta modificación favorece la biodiversidad, algo central en el ODS 15 (Vida de ecosistemas terrestres). Al mirar esta imagen desde la psicología, enfrentamos nuestra propia disonancia cognitiva: nos cuesta asumir que las decisiones diarias dañan el entorno. Entender el papel de cadaespecie en la naturaleza es el primer paso para dejar la apatía de lado y empezar a actuar con verdadera empatía ambiental.', imagen: './imagenes/sala1/arboles.jpeg',
         pos: [-2.13, 4.55, -7.77], rotY: 93, alto: 2.4 },
        
     ],
@@ -334,7 +402,7 @@ const SALAS = [
     obras: [
     { tipo: 'panel', titulo: ' El DOMINIO VIOLENTO', autor: '¿Por qué durante siglos le llamamos "arte" y "valentía" a cazar animales que solo intentaban defender su vida?', ods: ['ODS 15 (Vida de ecosistemas terrestres)'], ficha: 'Antropocentrismo y desensibilización cultural', texto: 'Esta pintura muestra de forma muy cruda la violencia con la que los hombres atacan a los animales salvajes por pura diversión o ego. Este tipo de agresiones rompe la tranquilidad de la comunidad y del ecosistema, y va totalmente en contra del ODS 15 (Vida de ecosistemas terrestres). Si lo analizamos desde la psicología, la imagen deja ver un egoísmo gigante y cómo la gente se termina desensibilizando ante el dolor ajeno. Nos pone a pensar en lo urgente que es sentir empatía por otros seres.', imagen:'./imagenes/sala3/cazadores.jpeg',
         pos: [-1.65, 0.8, 4.18], rotY: -176.7, alto: 0.7},
-        { tipo: 'panel', titulo: 'El plato invisible', autor: '¿Cuánta crueldad y sufrimiento silenciado estás dispuesto a ignorar en tu plato a cambio de unos minutos de placer gastronómico?', ods: ['ODS 12 (Producción y consumo responsables)','ODS 15 (Vida de ecosistemas terrestres)'], ficha: 'Disociación cognitiva y desensibilización sistemática', texto: 'La mirada de los animales en la ganadería intensiva exponen la desconexión ética provocada por la producción masiva de alimentos. La psicología social explica que el consumo de carne procesada se sostiene sobre la disociación cognitiva: separamos el producto final empaquetado del ser sintiente sacrificado. Mediante el especismo y la desensibilización sistemática, la sociedad normaliza el sufrimiento animal para evitar la culpa moral. Esta fotografía actúa como un espejo incómodo en un entorno de consumo, desafiando la indiferencia ciudadana y exigiendo una reevaluación empática sobre cómo nuestras decisiones alimentarias individuales impactan la vida animal y los ecosistemas planetarios', imagen: './imagenes/sala3/marrano.jpeg',
+        { tipo: 'panel', titulo: 'El plato invisible', autor: '¿Cuánta crueldad y sufrimiento silenciado estás dispuesto a ignorar en tu plato a cambio de unos minutos de placer gastronómico?', ods: ['ODS 12 (Producción y consumo responsables)','ODS 15 (Vida de ecosistemas terrestres)'], ficha: 'Disociación cognitiva y desensibilización sistemática', texto: 'La mirada de los animales en la ganadería intensiva exponen la desconexión ética provocada por la producción masiva de alimentos. La psicología social explica que el consumo de carne procesada se sostiene sobre la disociación cognitiva: separamos el producto final empaquetado del ser sintiente sacrificado. Mediante el especismo y la desensibilización sistemática, la sociedad normaliza el sufrimiento animal para evitar la culpa moral. Esta fotografía actúa como un espejo incómodo en un entorno de consumo, desafiando la indiferencia ciudadana y exigiendo una reevaluación empática sobre cómo nuestras decisiones alimentarias individuales impactan la vida animal y los ecosistemas planetarios.', imagen: './imagenes/sala3/marrano.jpeg',
         pos: [-0.24, 0.5, 0.03], rotY: -176.5, alto: 0.5 },
 
         { tipo: 'panel', titulo: 'MIRADAS ENCERRADAS', autor: '¿Normalizar la crueldad hacia otras especies es el primer paso para perder nuestra propia humanidad?', ods: ['ODS 15 (Vida de ecosistemas terrestres) ','ODS 16 (Paz, justicia e instituciones sólidas)'],ficha: 'Apatía social y desensibilización', texto: 'Ver a estos animales encerrados muestra cómo el abandono afecta directamente la salud del organismo y refleja un problema grave en nuestra comunidad. Desde la psicología social, esta imagen evidencia la apatía y la desensibilización: nos hemos acostumbrado tanto a ver el dolor animal que preferimos mirar hacia otro lado para no sentirnos culpables. Al ignorar el sufrimiento de los más indefensos, apagamos nuestra propia empatía. Esta fotografía nos confronta y nos invita a dejar la indiferencia de lado para hacernos responsables del cuidado y la protección de los seres sintientes con los que convivimos.', imagen: './imagenes/sala3/perros.jpeg',
@@ -359,13 +427,13 @@ const SALAS = [
     entrada: [1, 0, 2.50], mirando: 180,
     obras: [
 
-    { tipo: 'panel', titulo: 'Soberanía en el concreto', autor: '¿Cómo la recuperación comunitaria del suelo urbano puede reducir nuestra dependencia de cadenas de suministro contaminantes?', ods: ['ODS 11 (Ciudades y comunidades sostenibles)','ODS 2 (Hambre cero)'], ficha: '', texto: 'La creación de huertas urbanas comunitarias representa una respuesta activa ante la inseguridad alimentaria y la degradación del espacio público. Desde la psicología ambiental, este proceso fomenta la autoeficacia comunitaria y la identidad de lugar, transformando espacios residuales en focos de cohesión social e integración con la naturaleza. Esta solución se alinea directamente con el ODS 11 (Ciudades y comunidades sostenibles) y el ODS 2 (Hambre cero), demostrando cómo la agricultura colectiva fortalece la resiliencia urbana, reduce la huella ecológica y promueve hábitos de consumo locales y conscientes.', imagen: './imagenes/sala4/feliz.jpeg',
+    { tipo: 'panel', titulo: 'Soberanía en el concreto', autor: '¿Cómo la recuperación comunitaria del suelo urbano puede reducir nuestra dependencia de cadenas de suministro contaminantes?', ods: [''], ficha: '', texto: 'La creación de huertas urbanas comunitarias representa una respuesta activa ante la inseguridad alimentaria y la degradación del espacio público. Desde la psicología ambiental, este proceso fomenta la autoeficacia comunitaria y la identidad de lugar, transformando espacios residuales en focos de cohesión social e integración con la naturaleza. Esta solución se alinea directamente con el ODS 11 (Ciudades y comunidades sostenibles) y el ODS 2 (Hambre cero), demostrando cómo la agricultura colectiva fortalece la resiliencia urbana, reduce la huella ecológica y promueve hábitos de consumo locales y conscientes.', imagen: './imagenes/sala4/feliz.jpeg',
         pos: [0.19, 2.1, 5.11], rotY: -176.1, alto: 1 },
-    { tipo: 'panel', titulo: 'El renacer de la tierra', autor: '¿Somos capaces de sanar las cicatrices que le hemos causado a la naturaleza antes de que sea irreversible?', ods: ['ODS 15 (Vida de ecosistemas terrestres)','ODS 13 (Acción por el clima)'], ficha: '', texto: 'Las acciones directas de reforestación representan la reparación activa del daño ecológico y la reconciliación entre el ser humano y su ecosistema. Este proceso activa la restauración psicológica y la biofilia, fortaleciendo el vínculo afectivo con el entorno y reduciendo la ecoansiedad mediante la acción concreta. La iniciativa se alinea con el ODS 15 (Vida de ecosistemas terrestres) y el ODS 13 (Acción por el clima), evidenciando que la regeneración ambiental es indispensable para frenar la pérdida de biodiversidad y mitigar el deterioro planetario', imagen: './imagenes/sala4/cultivo.jpeg',
+    { tipo: 'panel', titulo: 'El renacer de la tierra', autor: '¿Somos capaces de sanar las cicatrices que le hemos causado a la naturaleza antes de que sea irreversible?', ods: ['ODS 15 (Vida de ecosistemas terrestres)','ODS 13 (Acción por el clima)'], ficha: '', texto: 'Las acciones directas de reforestación representan la reparación activa del daño ecológico y la reconciliación entre el ser humano y su ecosistema. Este proceso activa la restauración psicológica y la biofilia, fortaleciendo el vínculo afectivo con el entorno y reduciendo la ecoansiedad mediante la acción concreta. La iniciativa se alinea con el ODS 15 (Vida de ecosistemas terrestres) y el ODS 13 (Acción por el clima), evidenciando que la regeneración ambiental es indispensable para frenar la pérdida de biodiversidad y mitigar el deterioro planetario.', imagen: './imagenes/sala4/cultivo.jpeg',
         pos: [-1.54, 2, -0.8], rotY: 43.2, alto: 1 },
-        { tipo: 'panel', titulo: 'La miseria que se esconde bajo el agua ', autor: '¿Utilizamos el activismo social como excusa para no limpiar nuestros mares y si para limpiar nuestras conciencias?', ods: ['ODS 12 (Porduccion y consumo responsable )','ODS 13 (Acción por el clima)','ODS 14 (Vida submarina)'], ficha: 'Desplazamiento del Costo Moral y Ambiental', texto: 'Un cuerpo frágil sumergido entre toneladas de plástico expone una profunda fractura social. Nos acostumbramos a consumir por comodidad, pero la basura nunca desaparece: solo cambia de código postal. Esta escena retrata la cara más cruel de la crisis ambiental: las comunidades que menos contribuyen a la producción masiva de desechos son quienes pagan el costo físico y humano de procesarlos. No es solo contaminación marina; es inequidad global. ¿Qué nos dice esta imagen sobre cómo la pobreza obliga a los más vulnerables a limpiar el desastre que ellos no provocaron? Es momento de asumir la responsabilidad de nuestro consumo', imagen: './imagenes/sala4/recoleccion.jpeg',
+        { tipo: 'panel', titulo: 'La miseria que se esconde bajo el agua ', autor: '¿Utilizamos el activismo social como excusa para no limpiar nuestros mares y si para limpiar nuestras conciencias?', ods: ['ODS 12 (Porduccion y consumo responsable )','ODS 13 (Acción por el clima)','ODS 14 (Vida submarina)'], ficha: 'Desplazamiento del Costo Moral y Ambiental', texto: 'Un cuerpo frágil sumergido entre toneladas de plástico expone una profunda fractura social. Nos acostumbramos a consumir por comodidad, pero la basura nunca desaparece: solo cambia de código postal. Esta escena retrata la cara más cruel de la crisis ambiental: las comunidades que menos contribuyen a la producción masiva de desechos son quienes pagan el costo físico y humano de procesarlos. No es solo contaminación marina; es inequidad global. ¿Qué nos dice esta imagen sobre cómo la pobreza obliga a los más vulnerables a limpiar el desastre que ellos no provocaron? Es momento de asumir la responsabilidad de nuestro consumo.', imagen: './imagenes/sala4/recoleccion.jpeg',
         pos: [-0.12, 2, -3.35], rotY: 0.2, alto: 1   },
-         { tipo: 'panel', titulo: 'Tejiendo la red del entorno', autor: '¿Hasta qué punto la acción colectiva puede transformar la indiferencia individual en responsabilidad compartida?', ods: ['ODS 11 (Ciudades y comunidades sostenibles','ODS 17 (Alianzas para lograr los objetivos)'], ficha: '', texto: 'La organización comunitaria para la restauración ambiental demuestra que el cambio estructural surge de la cohesión social. A través del principio de sentido de comunidad y autoeficacia colectiva, las personas superan la apatía y reconocen su poder de transformación sobre el entorno inmediato. Esta articulación se relaciona estrechamente con el ODS 11 (Ciudades y comunidades sostenibles) y el ODS 17 (Alianzas para lograr los objetivos), mostrando cómo el trabajo colaborativo fortalece el tejido social, promueve la gobernanza local y consolida entornos urbanos más resilientes frente a la crisis climática.', imagen: './imagenes/sala4/rio.jpeg',
+         { tipo: 'panel', titulo: 'Tejiendo la red del entorno', autor: '¿Hasta qué punto la acción colectiva puede transformar la indiferencia individual en responsabilidad compartida?', ods: [''], ficha: '', texto: 'La organización comunitaria para la restauración ambiental demuestra que el cambio estructural surge de la cohesión social. A través del principio de sentido de comunidad y autoeficacia colectiva, las personas superan la apatía y reconocen su poder de transformación sobre el entorno inmediato. Esta articulación se relaciona estrechamente con el ODS 11 (Ciudades y comunidades sostenibles) y el ODS 17 (Alianzas para lograr los objetivos), mostrando cómo el trabajo colaborativo fortalece el tejido social, promueve la gobernanza local y consolida entornos urbanos más resilientes frente a la crisis climática.', imagen: './imagenes/sala4/rio.jpeg',
         pos: [-0.03, 2.1, 0.7], rotY: 9.6, alto: 1 },
     ],
   },
@@ -737,6 +805,7 @@ async function entrarSala(indice, silencioso = false) {
     tBarra.style.width = '100%';
     await espera(250);
     transicion.classList.remove('visible');
+    mostrarInstrucciones();
   }
   enTransicion = false;
 
@@ -813,41 +882,78 @@ function actualizarMenu() {
 
 const REFERENCIAS = [
   { sala: 'Sala I — Ensamble Biológico', items: [
-    { texto: 'Dreamstime. (s. f.). Una gota de agua descansa sobre una hoja verde vibrante. Recuperado de Dreamstime.', url: 'https://es.dreamstime.com/una-gota-de-agua-descansa-sobre-hoja-verde-vibrante-la-imagen-muestra-vista-m%C3%A1s-cercana-es-transparente-y-parece-reflejar-el-image393945275' },
-    { texto: 'StockCake. (s. f.). Primer plano detallado de un ojo. Recuperado de StockCake.', url: 'https://stockcake.com/es/i/primer-plano-detallado-de-un-ojo_1123989_363271' },
-    { texto: 'Schuster, S. (2026). Tronco de árbol roído por dientes de castor en el bosque [Fotografía]. Unsplash.', url: 'https://unsplash.com/es/fotos/tronco-de-arbol-roido-por-dientes-de-castor-en-el-bosque-7ODP7s6OOLI' },
-    { texto: 'Thompson, R. (2024). Macro through the winter. Robert Thompson Photography.', url: 'https://blog.robertthompsonphotography.com/2024/01/23/macro-through-the-winter/' },
+    { texto: 'Dreamstime. (s. f.). Una gota de agua descansa sobre una hoja verde vibrante. Recuperado de Dreamstime.', url: 'https://es.dreamstime.com/una-gota-de-agua-descansa-sobre-hoja-verde-vibrante-la-imagen-muestra-vista-m%C3%A1s-cercana-es-transparente-y-parece-reflejar-el-image393945275', obra: SALAS[0].obras[1] },
+    { texto: 'StockCake. (s. f.). Primer plano detallado de un ojo. Recuperado de StockCake.', url: 'https://stockcake.com/es/i/primer-plano-detallado-de-un-ojo_1123989_363271', obra: SALAS[0].obras[0] },
+    { texto: 'Schuster, S. (2026). Tronco de árbol roído por dientes de castor en el bosque [Fotografía]. Unsplash.', url: 'https://unsplash.com/es/fotos/tronco-de-arbol-roido-por-dientes-de-castor-en-el-bosque-7ODP7s6OOLI', obra: SALAS[0].obras[3] },
+    { texto: 'Thompson, R. (2024). Macro through the winter. Robert Thompson Photography.', url: 'https://blog.robertthompsonphotography.com/2024/01/23/macro-through-the-winter/', obra: SALAS[0].obras[2] },
   ]},
   { sala: 'Sala II — Fracturas y Huella Humana', items: [
-    { texto: 'Dreamstime. (s. f.). Plástico formando la figura de una medusa flotando bajo el agua, representando la contaminación oceánica [Fotografía]. Dreamstime.', url: 'https://www.dreamstime.com/plastic-waste-forming-jellyfish-shape-floating-underwater-depicting-ocean-pollution-plastic-bags-other-plastic-garbage-image353371156' },
-    { texto: 'Fast-fashion_deaths. (2022, 8 de enero). Where unsold fast fashion articles go to die [Fotografía]. Reddit.', url: 'https://www.reddit.com/r/Anticonsumption/comments/ryqqhi/where_unsold_fast_fashion_articles_go_to_die/' },
-    { texto: 'Unsplash. (s. f.-a). Fábricas con humo bajo el cielo nublado [Fotografía]. Unsplash.', url: 'https://unsplash.com/es/fotos/fabricas-con-humo-bajo-el-cielo-nublado-6xeDIZgoPaw' },
-    { texto: 'Unsplash. (s. f.-b). Niño recogiendo plástico en un vertedero [Fotografía]. Unsplash.', url: 'https://unsplash.com/es/fotos/nino-recogiendo-plastico-en-un-vertedero-R1_ibA4oXiI' },
+    { texto: 'Dreamstime. (s. f.). Plástico formando la figura de una medusa flotando bajo el agua, representando la contaminación oceánica [Fotografía]. Dreamstime.', url: 'https://www.dreamstime.com/plastic-waste-forming-jellyfish-shape-floating-underwater-depicting-ocean-pollution-plastic-bags-other-plastic-garbage-image353371156', obra: SALAS[1].obras[2] },
+    { texto: 'Fast-fashion_deaths. (2022, 8 de enero). Where unsold fast fashion articles go to die [Fotografía]. Reddit.', url: 'https://www.reddit.com/r/Anticonsumption/comments/ryqqhi/where_unsold_fast_fashion_articles_go_to_die/', obra: SALAS[1].obras[3] },
+    { texto: 'Unsplash. (s. f.-a). Fábricas con humo bajo el cielo nublado [Fotografía]. Unsplash.', url: 'https://unsplash.com/es/fotos/fabricas-con-humo-bajo-el-cielo-nublado-6xeDIZgoPaw', obra: SALAS[1].obras[1] },
+    { texto: 'Unsplash. (s. f.-b). Niño recogiendo plástico en un vertedero [Fotografía]. Unsplash.', url: 'https://unsplash.com/es/fotos/nino-recogiendo-plastico-en-un-vertedero-R1_ibA4oXiI', obra: SALAS[1].obras[0] },
   ]},
   { sala: 'Sala III — El Espejo Emocional', items: [
-    { texto: 'GenV. (s. f.). Agricultura animal. GenV.', url: 'https://genv.org/es/agricultura-animal/' },
-    { texto: 'Noticias Obreras. (2025, 27 de octubre). Erradicar el trabajo infantil: una cuestión de justicia fiscal y derechos humanos. Noticias Obreras.', url: 'https://noticiasobreras.es/2025/10/erradicar-el-trabajo-infantil-justicia-fiscal/' },
-    { texto: 'Unsplash. (s. f.-a). Escena caótica de caza con hombres, caballos, leones y jabalíes [Fotografía]. Unsplash.', url: 'https://unsplash.com/es/fotos/escena-caotica-de-caza-con-hombres-caballos-leones-y-jabalies-z74t3ppCQvI' },
-    { texto: 'Unsplash. (s. f.-b). Un grupo de perros sentados dentro de jaulas [Fotografía]. Unsplash.', url: 'https://unsplash.com/es/fotos/un-grupo-de-perros-sentados-dentro-de-jaulas-HK5LQ8CE56k' },
+    { texto: 'GenV. (s. f.). Agricultura animal. GenV.', url: 'https://genv.org/es/agricultura-animal/', obra: SALAS[2].obras[1] },
+    { texto: 'Noticias Obreras. (2025, 27 de octubre). Erradicar el trabajo infantil: una cuestión de justicia fiscal y derechos humanos. Noticias Obreras.', url: 'https://noticiasobreras.es/2025/10/erradicar-el-trabajo-infantil-justicia-fiscal/', obra: SALAS[2].obras[3] },
+    { texto: 'Unsplash. (s. f.-a). Escena caótica de caza con hombres, caballos, leones y jabalíes [Fotografía]. Unsplash.', url: 'https://unsplash.com/es/fotos/escena-caotica-de-caza-con-hombres-caballos-leones-y-jabalies-z74t3ppCQvI', obra: SALAS[2].obras[0] },
+    { texto: 'Unsplash. (s. f.-b). Un grupo de perros sentados dentro de jaulas [Fotografía]. Unsplash.', url: 'https://unsplash.com/es/fotos/un-grupo-de-perros-sentados-dentro-de-jaulas-HK5LQ8CE56k', obra: SALAS[2].obras[2] },
   ]},
   { sala: 'Sala IV — Territorios de Esperanza', items: [
-    { texto: 'Forbes Staff. (2022, 22 de noviembre). WWF: 7 de cada 10 personas apoyan la lucha contra contaminación plástica. Forbes México.', url: 'https://forbes.com.mx/wwf-7-de-cada-10-personas-apoyan-la-lucha-contra-contaminacion-plastica/' },
-    { texto: 'Redacción El País. (2025, 26 de julio). Cali vivió sus 489 años limpiando sus siete ríos: imágenes de cómo se vivió la jornada.', url: 'https://www.elpais.com.co/cali/cali-celebro-sus-489-anos-limpiando-sus-siete-rios-imagenes-de-como-se-vivio-la-jornada-0503.html' },
-    { texto: 'Red de Árboles. (s. f.). Siembra de árboles para empresas en Colombia.', url: 'https://www.reddearboles.org/empresas' },
-    { texto: 'Pinzón Bejarano, J. D. (2026, 15 de febrero). Bogotá cultiva vida con las huertas urbanas que transforman la ciudad. Canal Capital.', url: 'https://www.canalcapital.gov.co/actualidad/bogota-y-sus-huertas-urbanas/' },
+    { texto: 'Forbes Staff. (2022, 22 de noviembre). WWF: 7 de cada 10 personas apoyan la lucha contra contaminación plástica. Forbes México.', url: 'https://forbes.com.mx/wwf-7-de-cada-10-personas-apoyan-la-lucha-contra-contaminacion-plastica/', obra: SALAS[3].obras[2] },
+    { texto: 'Redacción El País. (2025, 26 de julio). Cali vivió sus 489 años limpiando sus siete ríos: imágenes de cómo se vivió la jornada.', url: 'https://www.elpais.com.co/cali/cali-celebro-sus-489-anos-limpiando-sus-siete-rios-imagenes-de-como-se-vivio-la-jornada-0503.html', obra: SALAS[3].obras[3] },
+    { texto: 'Red de Árboles. (s. f.). Siembra de árboles para empresas en Colombia.', url: 'https://www.reddearboles.org/empresas', obra: SALAS[3].obras[1] },
+    { texto: 'Pinzón Bejarano, J. D. (2026, 15 de febrero). Bogotá cultiva vida con las huertas urbanas que transforman la ciudad. Canal Capital.', url: 'https://www.canalcapital.gov.co/actualidad/bogota-y-sus-huertas-urbanas/', obra: SALAS[3].obras[0] },
   ]},
 ];
 
 const panelReferencias = document.getElementById('panelReferencias');
 const listaReferencias = document.getElementById('listaReferencias');
 
-listaReferencias.innerHTML = REFERENCIAS.map(grupo => `
+listaReferencias.innerHTML = REFERENCIAS.map((grupo, gi) => `
   <h3>${grupo.sala}</h3>
-  <ol>${grupo.items.map(r => `<li>${r.texto}${r.url ? ` <a href="${r.url}" target="_blank" rel="noopener">${r.url}</a>` : ''}</li>`).join('')}</ol>
+  <ol>${grupo.items.map((r, ri) => `<li class="ref-item" data-sala="${gi}" data-item="${ri}">` +
+    `<span class="ref-texto">${r.texto}${r.url ? ` <a href="${r.url}" target="_blank" rel="noopener" onclick="event.stopPropagation()">${r.url}</a>` : ''}</span>` +
+    `${r.obra ? '<span class="ver-obra">Ver obra</span>' : ''}` +
+  `</li>`).join('')}</ol>
 `).join('');
 
 document.getElementById('btnReferencias').addEventListener('click', () => panelReferencias.classList.add('visible'));
 document.getElementById('cerrarReferencias').addEventListener('click', () => panelReferencias.classList.remove('visible'));
+
+listaReferencias.querySelectorAll('.ref-item').forEach((li) => {
+  const r = REFERENCIAS[li.dataset.sala].items[li.dataset.item];
+  if (!r.obra) return;
+  li.addEventListener('click', () => abrirVisor(r.obra));
+});
+
+/* ---------- Visor de obra (imagen + cédula completa) ---------- */
+
+const visorObra = document.getElementById('visorObra');
+
+function abrirVisor(obra) {
+  document.getElementById('vo-imagen').src = obra.imagen || '';
+  document.getElementById('vo-titulo').textContent = obra.titulo || '';
+  document.getElementById('vo-autor').textContent = obra.autor || '';
+  document.getElementById('vo-ficha').textContent = obra.ficha || '';
+  document.getElementById('vo-texto').textContent = obra.texto || '';
+
+  const contenedorOds = document.getElementById('vo-ods');
+  contenedorOds.innerHTML = '';
+  if (obra.ods) {
+    const listaOds = Array.isArray(obra.ods) ? obra.ods : obra.ods.split(',').map(s => s.trim());
+    listaOds.forEach(texto => {
+      if (texto !== '') {
+        const tag = document.createElement('span');
+        tag.className = 'tag';
+        tag.textContent = texto;
+        contenedorOds.appendChild(tag);
+      }
+    });
+  }
+  visorObra.classList.add('visible');
+}
+document.getElementById('cerrarVisor').addEventListener('click', () => visorObra.classList.remove('visible'));
 
 /* El bloqueo del puntero necesita un gesto del usuario, así que se pide
    dentro del click; la carga viene después, con el puntero ya bloqueado. */
@@ -1022,6 +1128,32 @@ render.domElement.addEventListener('click', () => { if (controles.isLocked) abri
 document.getElementById('cerrar').addEventListener('click', (e) => { e.stopPropagation(); cerrarCedula(); });
 
 /* ════════════════════════════════════════════════════════════
+   9B. CARTEL DE INSTRUCCIONES (mouse / WASD)
+   ────────────────────────────────────────────────────────────
+   Se muestra al entrar a cada sala y se oculta con el primer
+   movimiento (tecla o mirada) o, si el usuario no hace nada,
+   solo por unos segundos.
+   ════════════════════════════════════════════════════════════ */
+
+const instrucciones = document.getElementById('instrucciones');
+let temporizadorInstrucciones = null;
+const TECLAS_MOVIMIENTO = new Set(['KeyW', 'KeyA', 'KeyS', 'KeyD', 'ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight']);
+
+function mostrarInstrucciones() {
+  instrucciones.classList.add('visible');
+  clearTimeout(temporizadorInstrucciones);
+  temporizadorInstrucciones = setTimeout(ocultarInstrucciones, 6000);
+}
+function ocultarInstrucciones() {
+  instrucciones.classList.remove('visible');
+  clearTimeout(temporizadorInstrucciones);
+}
+/* Nota: NO se oculta con el evento 'change' de la cámara (mirar con el
+   mouse), porque el puntero ya queda bloqueado mientras la sala carga
+   y cualquier mínimo temblor del mouse en ese momento cancelaba el
+   cartel antes de que el usuario llegara a verlo. */
+
+/* ════════════════════════════════════════════════════════════
    10. MODO EDITOR
    ════════════════════════════════════════════════════════════ */
 
@@ -1092,6 +1224,7 @@ function actualizarHUD() {
 
 addEventListener('keydown', (e) => {
   teclas.add(e.code);
+  if (TECLAS_MOVIMIENTO.has(e.code)) ocultarInstrucciones();
   if (e.code === 'KeyE') { if (lecturaActiva) cerrarCedula(); else abrirCedula(); }
   if (e.code === 'KeyM' && controles.isLocked) abrirMenu();
   if (CONFIG.modoEditor && controles.isLocked && !enTransicion && !lecturaActiva) {
@@ -1106,9 +1239,16 @@ addEventListener('keydown', (e) => {
 });
 addEventListener('keyup', (e) => teclas.delete(e.code));
 
+let instruccionesMostradasAlgunaVez = false;
 controles.addEventListener('lock', () => {
   portada.style.display = 'none';
   if (CONFIG.modoEditor) hudEditor.style.display = 'block';
+  // La sala 0 se precarga en silencio antes del primer clic, así que
+  // entrarSala nunca dispara el cartel para esa primera entrada.
+  if (!instruccionesMostradasAlgunaVez) {
+    instruccionesMostradasAlgunaVez = true;
+    mostrarInstrucciones();
+  }
 });
 controles.addEventListener('unlock', () => {
   if (lecturaActiva) return;   // el puntero se soltó a propósito para leer, no vamos al menú
