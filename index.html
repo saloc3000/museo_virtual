@@ -22,7 +22,7 @@
     gap: 24px; text-align: center; padding: 32px;
     background: radial-gradient(120% 90% at 50% 45%, #1b2620 0%, #0a0d0b 100%);
   }
-  #portada { z-index: 30; overflow-y: auto; }
+  #portada { z-index: 30; overflow-y: auto; justify-content: flex-start; padding-top: 48px; padding-bottom: 48px; }
   #transicion { z-index: 25; opacity: 0; pointer-events: none; transition: opacity .45s ease; }
   #transicion.visible { opacity: 1; pointer-events: auto; }
 
@@ -30,7 +30,7 @@
   #portada h1 { font-size: clamp(30px, 6vw, 52px); }
   #transicion h2 { font-size: clamp(26px, 5vw, 42px); }
   .rotulo { font-size: 11px; letter-spacing: .22em; text-transform: uppercase; color: var(--acento); margin: 0 0 6px; }
-  #portada .bajada { max-width: 46ch; color: var(--cal); line-height: 1.6; font-size: 14px; margin: 0; }
+  #portada .bajada { max-width: 46ch; color: var(--cal); line-height: 1.6; font-size: 14px; margin: 0 auto; }
 
   /* ---------- Menú de salas ---------- */
   #menuSalas { display: flex; flex-direction: column; gap: 1px; width: min(420px, 100%); }
@@ -142,9 +142,19 @@
   #editor b { color: var(--acento); font-weight: 600; }
 
   .grupo4 {
-    max-width: min(420px, 90vw); width: 100%; height: auto; display: block;
+    max-width: min(680px, 90vw); width: 100%; height: auto; display: block;
     margin: 4px auto 0; border-radius: 4px; box-shadow: 0 8px 30px rgba(0,0,0,.5);
+    cursor: zoom-in; transition: opacity .15s;
   }
+  .grupo4:hover { opacity: .9; }
+
+  #lightboxGrupo4 {
+    position: fixed; inset: 0; z-index: 60; display: none;
+    align-items: center; justify-content: center; padding: 24px;
+    background: rgba(4,6,5,.94); backdrop-filter: blur(6px); cursor: zoom-out;
+  }
+  #lightboxGrupo4.visible { display: flex; }
+  #lightboxGrupo4 img { max-width: 100%; max-height: 100%; object-fit: contain; border-radius: 4px; }
 
   .sala-btn.referencias-btn { margin-top: 10px; border-top: 1px solid #26302a; opacity: .85; }
   .sala-btn.referencias-btn:hover { opacity: 1; }
@@ -217,7 +227,7 @@
 <div id="portada">
   <div>
     <h1>Museo Virtual</h1>
-    <img src="./imagenes/grupo4.jpeg" alt="Grupo 4" class="grupo4">
+    <img src="./imagenes/grupo4.jpeg" alt="Grupo 4" class="grupo4" id="imgGrupo4">
     <p class="bajada">Elige una sala para entrar. Dentro, acércate a un panel y míralo para leer su cédula.</p>
   </div>
   <div id="menuSalas"></div>
@@ -225,6 +235,10 @@
   <div class="teclas">
     <kbd>W A S D — caminar</kbd><kbd>E — leer</kbd><kbd>M o Esc — menú</kbd>
   </div>
+</div>
+
+<div id="lightboxGrupo4">
+  <img src="./imagenes/grupo4.jpeg" alt="Grupo 4">
 </div>
 
 <div id="panelReferencias">
@@ -377,9 +391,9 @@ const SALAS = [
       { pos: [-2, 22.83, 13.62], size: [30, 20, 2] },
     ],
     obras: [
-       { tipo: 'panel', titulo: 'EL PESO DE EL DESECHO', autor: '¿Compramos cosas que no necesitamos con recursos que no recuperaremos, es el consumo desmedido la mayor adicción de nuestro siglo?', ods: ['ODS 12 (Producción y consumo responsables)'], ficha: '', texto: 'Esta foto muestra de forma muy clara el impacto del plástico en el planeta y la cantidad de basura que generamos día a día. La acumulación de plásticos rompe el equilibrio de la comunidad y el ecosistema, relacionándose directamente con el ODS 12 (Producción y consumo responsables). Desde la psicología, la imagen refleja el antropocentrismo y la disonancia cognitiva: sabemos perfectamente el daño que causa el consumo desmedido, pero por indolencia preferimos no cambiarnuestros hábitos. Ver esta realidad nos obliga a dejar las excusas y a cambiar la forma en que consumimos.', imagen: './imagenes/sala2/basura.jpeg',
+       { tipo: 'panel', titulo: 'El peso del desecho', autor: '¿Compramos cosas que no necesitamos con recursos que no recuperaremos, es el consumo desmedido la mayor adicción de nuestro siglo?', ods: ['ODS 12 (Producción y consumo responsables)'], ficha: '', texto: 'Esta foto muestra de forma muy clara el impacto del plástico en el planeta y la cantidad de basura que generamos día a día. La acumulación de plásticos rompe el equilibrio de la comunidad y el ecosistema, relacionándose directamente con el ODS 12 (Producción y consumo responsables). Desde la psicología, la imagen refleja el antropocentrismo y la disonancia cognitiva: sabemos perfectamente el daño que causa el consumo desmedido, pero por indolencia preferimos no cambiarnuestros hábitos. Ver esta realidad nos obliga a dejar las excusas y a cambiar la forma en que consumimos.', imagen: './imagenes/sala2/basura.jpeg',
         pos: [-2.44, 15.68, -10.59], rotY: 4.8, alto: 2.4 },
-      { tipo: 'panel', titulo: 'CIELO DE HUMO', autor: '¿Hasta cuándo vamos a llamar "desarrollo" a algo que nos está dejando sin aire limpio para vivir?', ods: ['ODS 13 (Acción por el clima)'], ficha: '', texto: 'Esta foto muestra la gran cantidad de humo que las fábricas tiran al aire todos los días. Esto arruina la calidad del aire que respiramos y termina afectando a toda la comunidad y al ecosistema. El tema se relaciona directamente con el ODS 13 (Acción por el clima). Si lo vemos desde la psicología, la imagen muestra la negación y el antropocentrismo: como sociedad preferimos seguir produciendo dinero antes que cuidar la salud del planeta. Nos hace pensar en lo fácil que nos acostumbramos a ver la contaminación como algo normal.', imagen:  './imagenes/sala2/fabrica.jpeg',
+      { tipo: 'panel', titulo: 'Cielo de humo', autor: '¿Hasta cuándo vamos a llamar "desarrollo" a algo que nos está dejando sin aire limpio para vivir?', ods: ['ODS 13 (Acción por el clima)'], ficha: '', texto: 'Esta foto muestra la gran cantidad de humo que las fábricas tiran al aire todos los días. Esto arruina la calidad del aire que respiramos y termina afectando a toda la comunidad y al ecosistema. El tema se relaciona directamente con el ODS 13 (Acción por el clima). Si lo vemos desde la psicología, la imagen muestra la negación y el antropocentrismo: como sociedad preferimos seguir produciendo dinero antes que cuidar la salud del planeta. Nos hace pensar en lo fácil que nos acostumbramos a ver la contaminación como algo normal.', imagen:  './imagenes/sala2/fabrica.jpeg',
         pos: [-2.3, 15.68, 9.64], rotY: -177.9, alto: 2.4 },
       { tipo: 'panel', titulo: 'El monstruo sintético', autor: '¿En qué momento tu comodidad de usar un plástico por cinco minutos se convirtió en una condena eterna para los océanos del planeta?', ods: ['ODS 14 (Vida submarina)','ODS 12 (Producción y consumo responsables)','ODS 6 (Agua limpia y saneamiento)'], ficha: 'Ceguera conductual y difusión de la responsabilidad.', texto: 'Una bolsa plástica flotando bajo el agua simulando la forma de una medusa visibiliza la contaminación sintética que asfixia los ecosistemas marinos. La psicología ambiental analiza este fenómeno mediante la ceguera conductual y la difusión de la responsabilidad: desvinculamos nuestras acciones cotidianas del impacto lejano en la vida acuática. Al normalizar los plásticos de un solo uso, incurrimos en una desconexión perceptiva que invisibiliza el sufrimiento de la fauna marina. Esta fotografía confronta la indiferencia del espectador, demostrando cómo la comodidad individual altera la biosfera e invalida la ética de cuidado requerida para proteger la biodiversidad marina.', imagen:  './imagenes/sala2/medusa.jpeg',
         pos: [2.8, 15.7, 0.92], rotY: -91.9, alto: 2.4 },
@@ -400,12 +414,12 @@ const SALAS = [
     seguirPiso: false,          // altura fija: el raycast tomaba la cubierta
     entrada: [0.39, -1, 0.10], mirando: -75,
     obras: [
-    { tipo: 'panel', titulo: ' El DOMINIO VIOLENTO', autor: '¿Por qué durante siglos le llamamos "arte" y "valentía" a cazar animales que solo intentaban defender su vida?', ods: ['ODS 15 (Vida de ecosistemas terrestres)'], ficha: 'Antropocentrismo y desensibilización cultural', texto: 'Esta pintura muestra de forma muy cruda la violencia con la que los hombres atacan a los animales salvajes por pura diversión o ego. Este tipo de agresiones rompe la tranquilidad de la comunidad y del ecosistema, y va totalmente en contra del ODS 15 (Vida de ecosistemas terrestres). Si lo analizamos desde la psicología, la imagen deja ver un egoísmo gigante y cómo la gente se termina desensibilizando ante el dolor ajeno. Nos pone a pensar en lo urgente que es sentir empatía por otros seres.', imagen:'./imagenes/sala3/cazadores.jpeg',
+    { tipo: 'panel', titulo: ' El dominio violento', autor: '¿Por qué durante siglos le llamamos "arte" y "valentía" a cazar animales que solo intentaban defender su vida?', ods: ['ODS 15 (Vida de ecosistemas terrestres)'], ficha: 'Antropocentrismo y desensibilización cultural', texto: 'Esta pintura muestra de forma muy cruda la violencia con la que los hombres atacan a los animales salvajes por pura diversión o ego. Este tipo de agresiones rompe la tranquilidad de la comunidad y del ecosistema, y va totalmente en contra del ODS 15 (Vida de ecosistemas terrestres). Si lo analizamos desde la psicología, la imagen deja ver un egoísmo gigante y cómo la gente se termina desensibilizando ante el dolor ajeno. Nos pone a pensar en lo urgente que es sentir empatía por otros seres.', imagen:'./imagenes/sala3/cazadores.jpeg',
         pos: [-1.65, 0.8, 4.18], rotY: -176.7, alto: 0.7},
         { tipo: 'panel', titulo: 'El plato invisible', autor: '¿Cuánta crueldad y sufrimiento silenciado estás dispuesto a ignorar en tu plato a cambio de unos minutos de placer gastronómico?', ods: ['ODS 12 (Producción y consumo responsables)','ODS 15 (Vida de ecosistemas terrestres)'], ficha: 'Disociación cognitiva y desensibilización sistemática', texto: 'La mirada de los animales en la ganadería intensiva exponen la desconexión ética provocada por la producción masiva de alimentos. La psicología social explica que el consumo de carne procesada se sostiene sobre la disociación cognitiva: separamos el producto final empaquetado del ser sintiente sacrificado. Mediante el especismo y la desensibilización sistemática, la sociedad normaliza el sufrimiento animal para evitar la culpa moral. Esta fotografía actúa como un espejo incómodo en un entorno de consumo, desafiando la indiferencia ciudadana y exigiendo una reevaluación empática sobre cómo nuestras decisiones alimentarias individuales impactan la vida animal y los ecosistemas planetarios.', imagen: './imagenes/sala3/marrano.jpeg',
         pos: [-0.24, 0.5, 0.03], rotY: -176.5, alto: 0.5 },
 
-        { tipo: 'panel', titulo: 'MIRADAS ENCERRADAS', autor: '¿Normalizar la crueldad hacia otras especies es el primer paso para perder nuestra propia humanidad?', ods: ['ODS 15 (Vida de ecosistemas terrestres) ','ODS 16 (Paz, justicia e instituciones sólidas)'],ficha: 'Apatía social y desensibilización', texto: 'Ver a estos animales encerrados muestra cómo el abandono afecta directamente la salud del organismo y refleja un problema grave en nuestra comunidad. Desde la psicología social, esta imagen evidencia la apatía y la desensibilización: nos hemos acostumbrado tanto a ver el dolor animal que preferimos mirar hacia otro lado para no sentirnos culpables. Al ignorar el sufrimiento de los más indefensos, apagamos nuestra propia empatía. Esta fotografía nos confronta y nos invita a dejar la indiferencia de lado para hacernos responsables del cuidado y la protección de los seres sintientes con los que convivimos.', imagen: './imagenes/sala3/perros.jpeg',
+        { tipo: 'panel', titulo: 'Miradas encerradas', autor: '¿Normalizar la crueldad hacia otras especies es el primer paso para perder nuestra propia humanidad?', ods: ['ODS 15 (Vida de ecosistemas terrestres) ','ODS 16 (Paz, justicia e instituciones sólidas)'],ficha: 'Apatía social y desensibilización', texto: 'Ver a estos animales encerrados muestra cómo el abandono afecta directamente la salud del organismo y refleja un problema grave en nuestra comunidad. Desde la psicología social, esta imagen evidencia la apatía y la desensibilización: nos hemos acostumbrado tanto a ver el dolor animal que preferimos mirar hacia otro lado para no sentirnos culpables. Al ignorar el sufrimiento de los más indefensos, apagamos nuestra propia empatía. Esta fotografía nos confronta y nos invita a dejar la indiferencia de lado para hacernos responsables del cuidado y la protección de los seres sintientes con los que convivimos.', imagen: './imagenes/sala3/perros.jpeg',
         pos: [-2.68, 0.55, -0.62], rotY: 87.9, alto: 0.8 },
         // { tipo: 'panel', titulo: 'La infancia empaquetada', autor: '¿Realmente cree que un objeto o un regalo plástico es "barato" cuando el precio real lo está pagando la infancia robada de un niño al otro lado del mundo?', ods: [' ODS 8 (Trabajo decente y crecimiento económico)','ODS 10 (Reducción de las desigualdades)','ODS 12 (Producción y consumo responsables)'], ficha: ' Indefensión aprendida y sesgo de desconexión geográfica', texto: 'manos infantiles sometidas al trabajo industrial invisibilizado exponen las dinámicas de explotación detrás de la manufactura global. La psicología comunitaria advierte que la exposición prematura a entornos laborales abusivos genera indefensión aprendida y frena el desarrollo socioemocional de la niñez. El sesgo de desconexión geográfica permite a las sociedades de alto consumo disfrutar de productos económicos ignorando la vulneración de derechos humanos en la cadena de suministro. Esta obra interpela directamente al espectador en su rol de consumidor, demostrando cómo la búsqueda de gratificación barata e inmediata perpetúa la injusticia social y la apatía frente a la desigualdad global', imagen: './imagenes/sala3/niños.jpeg',
         // pos: [-2.68, 0.55, -0.62], rotY: 87.9, alto: 1.4 },
@@ -955,6 +969,12 @@ function abrirVisor(obra) {
 }
 document.getElementById('cerrarVisor').addEventListener('click', () => visorObra.classList.remove('visible'));
 
+/* ---------- Lightbox de la imagen de créditos (portada) ---------- */
+
+const lightboxGrupo4 = document.getElementById('lightboxGrupo4');
+document.getElementById('imgGrupo4').addEventListener('click', () => lightboxGrupo4.classList.add('visible'));
+lightboxGrupo4.addEventListener('click', () => lightboxGrupo4.classList.remove('visible'));
+
 /* El bloqueo del puntero necesita un gesto del usuario, así que se pide
    dentro del click; la carga viene después, con el puntero ya bloqueado. */
 function seleccionarSala(i) {
@@ -1274,7 +1294,7 @@ entrarSala(0, true).then(() => {
   progreso.textContent = 'Elige una sala';
   botones.forEach(b => b.disabled = false);
   actualizarMenu();
-  botones[0].focus();
+  botones[0].focus({ preventScroll: true });   // sin esto, el navegador desplazaba la portada para mostrar el botón
 });
 
 addEventListener('resize', () => {
