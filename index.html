@@ -82,7 +82,7 @@
   #instrucciones b { color: var(--acento); font-weight: 600; }
 #cedula {
   position: fixed; right: 28px; top: 50%; transform: translate(24px, -50%);
-  width: min(340px, calc(100vw - 56px)); z-index: 20;
+  width: min(640px, calc(100vw - 56px)); z-index: 20;
   background: rgba(10,14,11,.92); backdrop-filter: blur(14px);
   border-left: 2px solid var(--acento); padding: 26px; opacity: 0; pointer-events: none;
   transition: opacity .3s, transform .3s;
@@ -93,8 +93,8 @@
   box-sizing: border-box;    /* Asegura que el padding no rompa el cálculo de la altura */
 }
   #cedula.visible { opacity: 1; transform: translate(0, -50%); pointer-events: auto; }
-  #cedula h2, #visorObra h2 { font-family: var(--serif); font-weight: 400; font-size: 25px; line-height: 1.25; margin: 0 0 4px; }
-  #cedula .autor, #visorObra .autor { font-size: 11px; letter-spacing: .18em; color: var(--acento); margin: 0 0 10px; }
+  #cedula h2, #visorObra h2 { font-family: var(--serif); font-weight: 400; font-size: 35px; line-height: 1.25; margin: 0 0 4px; }
+  #cedula .autor, #visorObra .autor { font-size: 18px; letter-spacing: .18em; color: var(--acento); margin: 0 0 10px; }
 
   /* --- REEMPLAZO Y NUEVOS ESTILOS PARA LOS TAGS --- */
   #cedula .ods, #visorObra .ods {
@@ -107,7 +107,7 @@
 
   /* Estilo visual de cada tag individual */
   #cedula .ods .tag, #visorObra .ods .tag {
-    font-size: 11px;
+    font-size: 16px;
     font-weight: 600;
     letter-spacing: .05em;
     color: #0a0e0b;                     /* Texto oscuro para buen contraste */
@@ -120,8 +120,8 @@
   }
 
   #cedula hr { border: 0; border-top: 1px solid #26302a; margin: 0 0 16px; }
-  #cedula .ficha, #visorObra .ficha { font-size: 12px; color: var(--cal); margin: 0 0 14px; }
-  #cedula .texto, #visorObra .texto { font-size: 14px; line-height: 1.65; color: #ccd5cc; margin: 0; }
+  #cedula .ficha, #visorObra .ficha { font-size: 18px; color: var(--cal); margin: 0 0 14px; }
+  #cedula .texto, #visorObra .texto { font-size: 24px; line-height: 1.65; color: #ccd5cc; margin: 0; }
   #cerrar { position: absolute; top: 14px; right: 14px; background: none; border: 0; cursor: pointer; color: var(--cal); font-size: 20px; }
   #cerrar:hover { color: var(--papel); }
 
